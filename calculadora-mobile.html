@@ -126,8 +126,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}.toast.err{border-left-color:var(--red);}
 .hidden-file{display:none;}
 .storage-note{font-size:11px;color:var(--s400);text-align:center;padding:10px 4px 0;line-height:1.5;}
-#label-preview{display:flex;justify-content:center;margin:6px 0 0;}
-#label-preview svg{width:min(240px,72%);height:auto;}
+#label-preview{display:flex;flex-direction:column;align-items:center;margin:6px 0 0;}
+#label-preview svg{width:min(280px,82%);height:auto;}
+#label-preview .pv-caption{font-size:11px;color:var(--s400);font-weight:600;margin-top:4px;text-align:center;line-height:1.5;}
 .pin-status{min-height:16px;font-size:11px;color:var(--red);font-weight:700;margin-bottom:8px;}
 .rz-linha{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--s200);font-size:13px;color:var(--s500);}
 .rz-linha b{color:var(--s900);white-space:nowrap;}
@@ -162,13 +163,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
   </div>
 
-  <div class="card"><div class="card-title">📏 Rendimento por m²</div>
+  <div class="card"><div class="card-title">📏 Rendimento por Folha</div>
     <div class="rend-destaque">
-      <span class="lbl">Etiquetas por m²</span>
+      <span class="lbl">Etiquetas por folha</span>
       <span class="val" id="rend-etiquetas-m2">—</span>
     </div>
     <div class="rend-linha"><span>Área por etiqueta (c/ gap)</span><b id="rend-area-unit">—</b></div>
-    <div class="rend-linha"><span>Área útil de impressão</span><b id="rend-area-util">0,9 m²</b></div>
+    <div class="rend-linha"><span>Folha · Área de impressão</span><b id="rend-area-util">1000 mm · 900×900 mm</b></div>
     <div id="label-preview" aria-hidden="true"></div>
     <div class="hint" style="margin-top:10px;">Conversor rápido — preencha um lado e veja o resultado no outro.</div>
     <div class="grid-2">
@@ -290,11 +291,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="grid-2">
       <div class="field"><label for="cfg-perda">Margem Perda Material (%)</label><input type="text" inputmode="decimal" id="cfg-perda"></div>
       <div class="field"><label for="cfg-hora">Hora Máquina (R$/h)</label><input type="text" inputmode="decimal" id="cfg-hora"></div>
-      <div class="field"><label for="cfg-area-util">Área Útil de Impressão (m²)</label><input type="text" inputmode="decimal" id="cfg-area-util"></div>
+      <div class="field"><label for="cfg-folha">Folha (mm)</label><input type="text" inputmode="numeric" id="cfg-folha"></div>
+      <div class="field"><label for="cfg-impressao">Impressão máx. (mm)</label><input type="text" inputmode="numeric" id="cfg-impressao"></div>
       <div class="field"><label for="cfg-empresa">Empresa Padrão (%)</label><input type="text" inputmode="decimal" id="cfg-empresa"></div>
       <div class="field"><label for="cfg-vendedor">Vendedor Padrão (%)</label><input type="text" inputmode="decimal" id="cfg-vendedor"></div>
     </div>
-    <div class="hint" style="margin-top:4px;">💡 Área útil = porção de 1 m² realmente aproveitável para impressão (padrão: 0,9 m² = 90%).</div>
+    <div class="hint" style="margin-top:4px;">💡 Etiquetas dispostas em grade dentro da área de impressão (padrão: folha 1000×1000 mm, impressão 900×900 mm).</div>
     <button class="btn btn-orange" onclick="salvarConfigs()" style="margin-top:12px;">💾 SALVAR CONFIGURAÇÕES</button>
   </div>
 
@@ -371,7 +373,7 @@ const DEFAULTS={
     modoAlta:14.50,modoAltaVel:7,
     modoMaxima:17.02,modoMaximaVel:5,
     whiteChapada:16.00,horaMaquina:25,
-    areaUtilImpressao:0.9,
+    folhaMm:1000,impressaoMm:900,
     empresaPadrao:15,vendedorPadrao:5},
   pin:'1234',vendedores:[],historico:[],logo:'',versao:16
 };
@@ -434,21 +436,25 @@ function obterAreaUnit(){
   const gap=parseNum(document.getElementById('gap').value)||0;
   return ((largura+2*gap)/1000)*((altura+2*gap)/1000);
 }
-function obterAreaUtil(){
-  const d=loadDB();
-  return d.configs.areaUtilImpressao||0.9;
+function obterFolha(){const v=Number(loadDB().configs.folhaMm);return v>0?v:1000;}
+function obterImpressao(){const f=obterFolha();const v=Number(loadDB().configs.impressaoMm);return (v>0&&v<=f)?v:f*0.9;}
+function geoEtiquetas(l,a,g){
+  const imp=obterImpressao();
+  const cw=l+2*g,ch=a+2*g;
+  const cols=cw>0?Math.floor(imp/cw):0,rows=ch>0?Math.floor(imp/ch):0;
+  return{cols:Math.max(0,cols),rows:Math.max(0,rows),n:Math.max(0,cols)*Math.max(0,rows),imp};
 }
 function calcularRendimento(){
   const areaUnit=obterAreaUnit();
-  const areaUtil=obterAreaUtil();
+  const geo=geoEtiquetas(parseNum(document.getElementById('largura').value)||0,parseNum(document.getElementById('altura').value)||0,parseNum(document.getElementById('gap').value)||0);
   const elM2=document.getElementById('rend-etiquetas-m2');
   const elArea=document.getElementById('rend-area-unit');
   const elUtil=document.getElementById('rend-area-util');
-  if(elUtil)elUtil.textContent=areaUtil.toFixed(2).replace('.',',')+' m²';
-  if(areaUnit<=0){
+  if(elUtil)elUtil.textContent=obterFolha()+' mm · '+geo.imp+'×'+geo.imp+' mm';
+  if(areaUnit<=0||geo.n<=0){
     elM2.textContent='—'; elArea.textContent='—';
   }else{
-    elM2.textContent=Math.floor(areaUtil/areaUnit).toLocaleString('pt-BR');
+    elM2.textContent=geo.n.toLocaleString('pt-BR');
     elArea.textContent=areaUnit.toFixed(4).replace('.',',')+' m²';
   }
   converterM2paraEtiquetas();
@@ -458,18 +464,18 @@ function calcularRendimento(){
 function converterM2paraEtiquetas(){
   const m2=parseNum(document.getElementById('conv-m2').value);
   const res=document.getElementById('conv-m2-result');
-  const areaUnit=obterAreaUnit();
-  const areaUtil=obterAreaUtil();
-  if(isNaN(m2)||m2<=0||areaUnit<=0){res.textContent='—';return;}
-  res.textContent=Math.floor((m2*areaUtil)/areaUnit).toLocaleString('pt-BR')+' etiquetas';
+  const geo=geoEtiquetas(parseNum(document.getElementById('largura').value)||0,parseNum(document.getElementById('altura').value)||0,parseNum(document.getElementById('gap').value)||0);
+  const folhaM2=Math.pow(obterFolha()/1000,2);
+  if(isNaN(m2)||m2<=0||geo.n<=0){res.textContent='—';return;}
+  res.textContent=Math.floor((m2/folhaM2)*geo.n).toLocaleString('pt-BR')+' etiquetas';
 }
 function converterEtiquetasParaM2(){
   const etiq=parseNum(document.getElementById('conv-etiq').value);
   const res=document.getElementById('conv-etiq-result');
-  const areaUnit=obterAreaUnit();
-  const areaUtil=obterAreaUtil();
-  if(isNaN(etiq)||etiq<=0||areaUnit<=0){res.textContent='—';return;}
-  const m2Necessarios=(etiq*areaUnit)/areaUtil;
+  const geo=geoEtiquetas(parseNum(document.getElementById('largura').value)||0,parseNum(document.getElementById('altura').value)||0,parseNum(document.getElementById('gap').value)||0);
+  const folhaM2=Math.pow(obterFolha()/1000,2);
+  if(isNaN(etiq)||etiq<=0||geo.n<=0){res.textContent='—';return;}
+  const m2Necessarios=(etiq/geo.n)*folhaM2;
   res.textContent=m2Necessarios.toFixed(3).replace('.',',')+' m²';
 }
 function desenharPreview(){
@@ -478,32 +484,34 @@ function desenharPreview(){
   const a=parseNum(document.getElementById('altura').value)||0;
   const g=parseNum(document.getElementById('gap').value)||0;
   if(l<=0||a<=0||l>3000||a>3000){host.innerHTML='';return;}
-  const areaUtil=obterAreaUtil();
-  const areaU=((l+2*g)/1000)*((a+2*g)/1000);
-  const nRep=areaU>0?Math.floor(areaUtil/areaU):0;
-  const W=l+2*g,H=a+2*g;
-  const MAX=600;
-  const desenhados=Math.min(nRep,MAX);
-  const cols=Math.max(1,Math.round(Math.sqrt(desenhados*W/H)));
-  const rows=Math.ceil(desenhados/cols);
-  const sheetW=cols*W,sheetH=rows*H;
-  const pad=Math.max(W,H)*0.35+6,txtH=15;
-  const vw=sheetW+pad*2,vh=sheetH+pad*2+txtH;
-  const sw=Math.max(W,H)*0.02+0.6,da=Math.max(W,H)*0.05,db=Math.max(W,H)*0.035;
+  const folha=obterFolha();
+  const geo=geoEtiquetas(l,a,g);
+  const imp=geo.imp;
+  const px=(folha-imp)/2,py=(folha-imp)/2;
   const f=v=>String(Math.round(v*100)/100).replace('.',',');
+  if(geo.n<=0||geo.cols<=0){
+    host.innerHTML='<svg viewBox="0 0 '+folha+' '+folha+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Etiqueta maior que a área de impressão">'
+      +'<rect x="2" y="2" width="'+(folha-4)+'" height="'+(folha-4)+'" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="4"/>'
+      +'<rect x="'+px+'" y="'+py+'" width="'+imp+'" height="'+imp+'" fill="#FFF7ED" stroke="#F97316" stroke-width="3" stroke-dasharray="18,12"/>'
+      +'<text x="'+(folha/2)+'" y="'+(folha/2-10)+'" text-anchor="middle" font-size="'+(folha*0.05)+'" font-weight="800" fill="#EA580C">Etiqueta não cabe</text>'
+      +'<text x="'+(folha/2)+'" y="'+(folha/2+30)+'" text-anchor="middle" font-size="'+(folha*0.032)+'" font-weight="600" fill="#64748B">maior que a impressão '+f(imp)+'×'+f(imp)+' mm</text>'
+      +'</svg><div class="pv-caption">'+f(l)+' × '+f(a)+' mm'+(g>0?' · gap '+f(g):'')+'</div>';
+    return;
+  }
+  const MAX=600;
+  const desenhados=Math.min(geo.n,MAX);
+  const cw=l+2*g,ch=a+2*g;
   let blocos='';
   for(let i=0;i<desenhados;i++){
-    const c=i%cols,r=(i-c)/cols;
-    blocos+='<rect x="'+(pad+c*W+g)+'" y="'+(pad+r*H+g)+'" width="'+l+'" height="'+a+'" rx="1" fill="#F97316"/>';
+    const c=i%geo.cols,r=(i-c)/geo.cols;
+    blocos+='<rect x="'+(px+c*cw+g)+'" y="'+(py+r*ch+g)+'" width="'+l+'" height="'+a+'" rx="2" fill="#F97316"/>';
   }
-  const legenda=nRep>MAX
-    ?'representação parcial — cada bloco = 1 etiqueta'
-    :'cada bloco = 1 etiqueta';
-  host.innerHTML='<svg viewBox="0 0 '+vw+' '+vh+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Prévia de '+desenhados+' etiquetas de '+f(l)+' por '+f(a)+' mm que cabem na área útil de '+areaUtil.toFixed(2).replace('.',',')+' m²">'
-    +'<rect x="'+pad+'" y="'+pad+'" width="'+sheetW+'" height="'+sheetH+'" fill="#FFF7ED" stroke="#F97316" stroke-width="'+sw+'" stroke-dasharray="'+da+','+db+'"/>'
+  const cap=f(l)+' × '+f(a)+' mm'+(g>0?' · gap '+f(g):'')+' · folha '+f(folha)+'×'+f(folha)+' mm · impressão '+f(imp)+'×'+f(imp)+' mm'+(geo.n>MAX?' · representação parcial':'');
+  host.innerHTML='<svg viewBox="0 0 '+folha+' '+folha+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Prévia: '+desenhados+' etiquetas de '+f(l)+' por '+f(a)+' mm por folha, em grade dentro da área de impressão de '+f(imp)+' por '+f(imp)+' milímetros">'
+    +'<rect x="2" y="2" width="'+(folha-4)+'" height="'+(folha-4)+'" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="4"/>'
+    +'<rect x="'+px+'" y="'+py+'" width="'+imp+'" height="'+imp+'" fill="#FFF7ED" stroke="#F97316" stroke-width="3" stroke-dasharray="18,12"/>'
     +blocos
-    +'<text x="'+(vw/2)+'" y="'+(vh-3)+'" text-anchor="middle" font-size="'+(txtH*0.72)+'" font-weight="700" fill="#94A3B8">'+f(l)+' × '+f(a)+' mm'+(g>0?' · gap '+f(g):'')+' · '+legenda+'</text>'
-    +'</svg>';
+    +'</svg><div class="pv-caption">'+cap+'</div>';
 }
 
 let adminUnlocked=false,pinTentativas=0,pinLockAte=0,pinCdTimer=null,editingMaterial=null,editingVendedor=null;
@@ -631,7 +639,8 @@ function carregarConfigs(){
   document.getElementById('cfg-purga').value=c.purga;
   document.getElementById('cfg-perda').value=c.perda;
   document.getElementById('cfg-hora').value=c.horaMaquina;
-  document.getElementById('cfg-area-util').value=c.areaUtilImpressao;
+  document.getElementById('cfg-folha').value=c.folhaMm;
+  document.getElementById('cfg-impressao').value=c.impressaoMm;
   document.getElementById('cfg-empresa').value=c.empresaPadrao;
   document.getElementById('cfg-vendedor').value=c.vendedorPadrao;
   document.getElementById('empresa').value=c.empresaPadrao;
@@ -653,7 +662,8 @@ function salvarConfigs(){
     modoMaximaVel:parseNum(document.getElementById('cfg-vel-maxima').value),
     whiteChapada:parseNum(document.getElementById('cfg-white').value),
     horaMaquina:parseNum(document.getElementById('cfg-hora').value),
-    areaUtilImpressao:parseNum(document.getElementById('cfg-area-util').value),
+    folhaMm:parseNum(document.getElementById('cfg-folha').value),
+    impressaoMm:parseNum(document.getElementById('cfg-impressao').value),
     empresaPadrao:parseNum(document.getElementById('cfg-empresa').value),
     vendedorPadrao:parseNum(document.getElementById('cfg-vendedor').value)
   };
@@ -676,7 +686,7 @@ function calcular(){
   const qtd=parseNum(document.getElementById('quantidade').value);
   const matNome=document.getElementById('material').value;
   const vendNome=document.getElementById('vendedor-select').value;
-  const areaUtil=cfg.areaUtilImpressao||0.9;
+  const geoCalc=geoEtiquetas(largura,altura,gap);
 
   const modoEl=document.querySelector('input[name="modo"]:checked');
   const modoKey=modoEl?modoEl.value:'Padrao';
@@ -711,7 +721,7 @@ function calcular(){
 
   const lB=(largura+2*gap)/1000,aB=(altura+2*gap)/1000;
   const areaU=lB*aB,areaL=areaU*qtd,areaP=areaL*(1+cfg.perda/100);
-  const etiquetasM2=areaU>0?Math.floor(areaUtil/areaU):0;
+  const etiquetasM2=geoCalc.n;
 
   const cMat=mat.valor*(1+mat.icms/100);
   const subTinta=custoCMYK+custoWhite;
@@ -728,14 +738,14 @@ function calcular(){
   const vEmp=r2(cTir*pctEmp/100);const vVend=r2(cTir*pctVend/100);
   const pTot=r2(cTir+vEmp+vVend+frete);const pUni=r4(pTot/qtd);
 
-  ultimoResultado={largura,altura,gap,qtd,matNome,canais,modo:modo.label+' ('+modo.res+')',modoKey,velModo,areaP,tempoProducao,custoMaquinaTotal,etiquetasM2,areaUtil,cTin,cTir,vEmp,vVend,frete,pTot,pUni,pctEmp,pctVend,vendNome};
+  ultimoResultado={largura,altura,gap,qtd,matNome,canais,modo:modo.label+' ('+modo.res+')',modoKey,velModo,areaP,tempoProducao,custoMaquinaTotal,etiquetasM2,cTin,cTir,vEmp,vVend,frete,pTot,pUni,pctEmp,pctVend,vendNome};
 
   salvarNoHistorico({id:novoId(),data:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),dataBr:new Date().toLocaleDateString('pt-BR'),vendedor:vendNome||'—',largura,altura,gap,quantidade:qtd,material:matNome,modo:modo.label,modoKey,canais,areaPerda:areaP,tempoProducao:tempoProducao,custoMaquina:custoMaquinaTotal,precoTotal:pTot,precoUnit:pUni,pctVendedor:pctVend,pctEmpresa:pctEmp,frete,custoTiragem:cTir,valEmpresa:vEmp,valVendedor:vVend});
 
   function ri(l,v){return'<div class="r-item"><span>'+l+'</span><b>'+v+'</b></div>';}
   let h='<div class="hero"><div class="t">💰 Preço de Venda Total</div><div class="v">'+brl(pTot)+'</div><div class="u">'+brl(pUni,4)+'/unid · '+Math.round(qtd).toLocaleString('pt-BR')+' un'+(vendNome?' · '+esc(vendNome):'')+'</div></div>';
 
-  h+='<div class="r-sec">Áreas</div>'+ri('Bruta',(lB*1000).toFixed(0)+'×'+(aB*1000).toFixed(0)+' mm')+ri('Área Unidade',areaU.toFixed(4)+' m²')+ri('Rendimento (área útil '+areaUtil.toFixed(1)+' m²)',etiquetasM2+' etiquetas/m²')+ri('Área Líquida',areaL.toFixed(3)+' m²')+ri('Área c/ Perda ('+cfg.perda+'%)',areaP.toFixed(3)+' m²');
+  h+='<div class="r-sec">Áreas</div>'+ri('Bruta',(lB*1000).toFixed(0)+'×'+(aB*1000).toFixed(0)+' mm')+ri('Área Unidade',areaU.toFixed(4)+' m²')+ri('Rendimento (impressão '+geoCalc.imp+'×'+geoCalc.imp+' mm)',etiquetasM2+' etiquetas/folha')+ri('Área Líquida',areaL.toFixed(3)+' m²')+ri('Área c/ Perda ('+cfg.perda+'%)',areaP.toFixed(3)+' m²');
 
   h+='<div class="r-sec">Impressão — '+modo.label+'</div>';
   h+=ri('Resolução',modo.res);
@@ -796,7 +806,7 @@ function gerarPDF(){
   doc.setTextColor(15,23,42);doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text('ESPECIFICAÇÕES',M,y);y+=6;
   doc.setDrawColor(249,115,22);doc.setLineWidth(0.5);doc.line(M,y,W-M,y);y+=6;
   doc.setFontSize(10);doc.setFont('helvetica','normal');
-  [['Dimensões',r.largura+' × '+r.altura+' mm (gap '+r.gap+')'],['Quantidade',Math.round(r.qtd).toLocaleString('pt-BR')+' un'],['Material',r.matNome],['Modo de Impressão',r.modo],['Cores Ativas',r.canais.join(', ')],['Rendimento',r.etiquetasM2+' etiquetas/m²'],['Tempo de Produção',fmtTempo(r.tempoProducao)]].forEach(s=>{doc.setFont('helvetica','bold');doc.text(s[0]+':',M,y);doc.setFont('helvetica','normal');doc.text(String(s[1]),M+45,y);y+=5.5;});
+  [['Dimensões',r.largura+' × '+r.altura+' mm (gap '+r.gap+')'],['Quantidade',Math.round(r.qtd).toLocaleString('pt-BR')+' un'],['Material',r.matNome],['Modo de Impressão',r.modo],['Cores Ativas',r.canais.join(', ')],['Rendimento',r.etiquetasM2+' etiquetas/folha'],['Tempo de Produção',fmtTempo(r.tempoProducao)]].forEach(s=>{doc.setFont('helvetica','bold');doc.text(s[0]+':',M,y);doc.setFont('helvetica','normal');doc.text(String(s[1]),M+45,y);y+=5.5;});
   y+=4;
   doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text('COMPOSIÇÃO DE CUSTOS',M,y);y+=6;doc.line(M,y,W-M,y);y+=6;doc.setFontSize(10);
   [['Custos Variáveis (material + tinta)',brl(r.cTir-r.custoMaquinaTotal)],['Custo Máquina ('+fmtTempo(r.tempoProducao)+')',brl(r.custoMaquinaTotal)],['Custo da Tiragem',brl(r.cTir)],['Empresa ('+r.pctEmp+'%)','+ '+brl(r.vEmp)],['Vendedor ('+r.pctVend+'%)','+ '+brl(r.vVend)],['Frete','+ '+brl(r.frete)]].forEach(c=>{doc.setFont('helvetica','normal');doc.text(c[0],M,y);doc.text(c[1],W-M,y,{align:'right'});y+=5.5;});
@@ -808,7 +818,7 @@ function gerarPDF(){
 
 function compartilhar(){
   const r=ultimoResultado;if(!r)return;
-  const txt='🏷️ *COTAÇÃO — RÓTULOS*\n━━━━━━━━━━━━━━━\n'+(r.vendNome?'👤 '+r.vendNome+'\n':'')+'📐 '+r.largura+'×'+r.altura+'mm (gap '+r.gap+')\n📦 '+Math.round(r.qtd).toLocaleString('pt-BR')+' un\n🧻 '+r.matNome+'\n🖨️ '+r.modo+'\n🎨 '+r.canais.join(', ')+'\n📏 Rendimento: '+r.etiquetasM2+' etiquetas/m²\n⏱️ Tempo de máquina: '+fmtTempo(r.tempoProducao)+'\n━━━━━━━━━━━━━━━\n🏭 Custo: '+brl(r.cTir)+'\n💼 Empresa ('+r.pctEmp+'%): +'+brl(r.vEmp)+'\n🤝 Vendedor ('+r.pctVend+'%): +'+brl(r.vVend)+'\n🚚 Frete: +'+brl(r.frete)+'\n━━━━━━━━━━━━━━━\n💰 *TOTAL: '+brl(r.pTot)+'*\n🔖 Unid: '+brl(r.pUni,4)+'\n\n_Daniel Souza · Calc. Rótulos V3_';
+  const txt='🏷️ *COTAÇÃO — RÓTULOS*\n━━━━━━━━━━━━━━━\n'+(r.vendNome?'👤 '+r.vendNome+'\n':'')+'📐 '+r.largura+'×'+r.altura+'mm (gap '+r.gap+')\n📦 '+Math.round(r.qtd).toLocaleString('pt-BR')+' un\n🧻 '+r.matNome+'\n🖨️ '+r.modo+'\n🎨 '+r.canais.join(', ')+'\n📏 Rendimento: '+r.etiquetasM2+' etiquetas/folha\n⏱️ Tempo de máquina: '+fmtTempo(r.tempoProducao)+'\n━━━━━━━━━━━━━━━\n🏭 Custo: '+brl(r.cTir)+'\n💼 Empresa ('+r.pctEmp+'%): +'+brl(r.vEmp)+'\n🤝 Vendedor ('+r.pctVend+'%): +'+brl(r.vVend)+'\n🚚 Frete: +'+brl(r.frete)+'\n━━━━━━━━━━━━━━━\n💰 *TOTAL: '+brl(r.pTot)+'*\n🔖 Unid: '+brl(r.pUni,4)+'\n\n_Daniel Souza · Calc. Rótulos V3_';
   if(navigator.share)navigator.share({title:'Cotação',text:txt}).catch(()=>{});
   else if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>toast('📋 Copiado!')).catch(()=>fbCopy(txt));
   else fbCopy(txt);

@@ -18,8 +18,9 @@ Autor do código original: **Daniel Souza** (v17.0).
 
 - 🧮 **Cotação**: dimensões (largura × altura × gap), quantidade, material e modo de impressão
   (Rascunho 300×600, Produção 600×600, Alta 600×900, Máxima 1200×1200)
-- 📐 **Rendimento por m²**: etiquetas por m² (com área útil configurável), conversor m² ⇄ etiquetas
-  e **prévia visual da etiqueta** em SVG (proporção + gap em tempo real)
+- 📐 **Rendimento por folha**: modelo geométrico real — folha de 1000×1000 mm com área de
+  impressão de 900×900 mm (configurável no Admin); etiquetas dispostas em grade (colunas × fileiras,
+  com gap) dentro da área, **prévia visual em SVG mostrando a imposição na folha**, conversor m² ⇄ etiquetas
 - 🎨 **Cores CMYK + branco** com cobertura (20–100%) e purga/limpeza
 - 💼 **Comercial**: comissão de vendedor e empresa, frete, preço total e por unidade
 - ⚖️ **Comparador de materiais**: no resumo da cotação, o preço final em todos os materiais,
