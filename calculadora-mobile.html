@@ -501,12 +501,13 @@ function desenharPreview(){
   const MAX=600;
   const desenhados=Math.min(geo.n,MAX);
   const cw=l+2*g,ch=a+2*g;
+  const offX=(folha-geo.cols*cw)/2,offY=(folha-geo.rows*ch)/2; /* grade centralizada na folha */
   let blocos='';
   for(let i=0;i<desenhados;i++){
     const c=i%geo.cols,r=(i-c)/geo.cols;
-    blocos+='<rect x="'+(px+c*cw+g)+'" y="'+(py+r*ch+g)+'" width="'+l+'" height="'+a+'" rx="2" fill="#F97316"/>';
+    blocos+='<rect x="'+(offX+c*cw+g)+'" y="'+(offY+r*ch+g)+'" width="'+l+'" height="'+a+'" rx="2" fill="#F97316"/>';
   }
-  const cap=f(l)+' × '+f(a)+' mm'+(g>0?' · gap '+f(g):'')+' · folha '+f(folha)+'×'+f(folha)+' mm · impressão '+f(imp)+'×'+f(imp)+' mm'+(geo.n>MAX?' · representação parcial':'');
+  const cap=f(l)+' × '+f(a)+' mm'+(g>0?' · gap '+f(g):'')+' · folha '+f(folha)+'×'+f(folha)+' mm · impressão '+f(imp)+'×'+f(imp)+' mm · grade centralizada'+(geo.n>MAX?' · representação parcial':'');
   host.innerHTML='<svg viewBox="0 0 '+folha+' '+folha+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Prévia: '+desenhados+' etiquetas de '+f(l)+' por '+f(a)+' mm por folha, em grade dentro da área de impressão de '+f(imp)+' por '+f(imp)+' milímetros">'
     +'<rect x="2" y="2" width="'+(folha-4)+'" height="'+(folha-4)+'" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="4"/>'
     +'<rect x="'+px+'" y="'+py+'" width="'+imp+'" height="'+imp+'" fill="#FFF7ED" stroke="#F97316" stroke-width="3" stroke-dasharray="18,12"/>'

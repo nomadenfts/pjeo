@@ -216,6 +216,8 @@ assert.ok(pv.includes('130 × 30 mm')); ok('dimensões no preview');
 assert.ok(pv.includes('gap 3')); ok('gap no preview');
 assert.strictEqual((pv.match(/fill="#F97316"/g)||[]).length, 150); ok('grid desenha 150 blocos dentro da folha');
 assert.ok(pv.includes('folha 1000×1000 mm · impressão 900×900 mm')); ok('legenda da folha/impressão no preview');
+/* centralização: grade 6×136=816mm → offX=(1000-816)/2=92; 25×36=900mm → offY=50; +gap 3 */
+assert.ok(pv.includes('<rect x="95" y="53" width="130" height="30"')); ok('primeira etiqueta centralizada na folha (95,53)');
 els['largura'].value = '0';
 calcularRendimento();
 assert.strictEqual(els['label-preview'].innerHTML, ''); ok('dimensão inválida → sem preview');
