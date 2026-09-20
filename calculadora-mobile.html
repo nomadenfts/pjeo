@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0F0F0F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -125,6 +125,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}.toast.err{border-left-color:var(--red);}
 .hidden-file{display:none;}
 .storage-note{font-size:11px;color:var(--s400);text-align:center;padding:10px 4px 0;line-height:1.5;}
+#label-preview{display:flex;justify-content:center;margin:6px 0 0;}
+#label-preview svg{width:min(240px,72%);height:auto;}
+.pin-status{min-height:16px;font-size:11px;color:var(--red);font-weight:700;margin-bottom:8px;}
+.rz-linha{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--s200);font-size:13px;color:var(--s500);}
+.rz-linha b{color:var(--s900);white-space:nowrap;}
+.rz-linha .rz-qtd{color:var(--s400);font-weight:600;}
+.rz-total{display:flex;justify-content:space-between;background:var(--orange-soft);border:1.5px solid var(--orange);border-radius:11px;padding:12px 14px;margin-top:10px;font-weight:800;color:var(--orange-dark);}
+.r-item.sel-mat span{color:var(--orange);font-weight:800;}
+.r-item.sel-mat b{color:var(--orange);}
+.confirm-overlay{position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:300;display:none;align-items:center;justify-content:center;padding:24px;}
+.confirm-overlay.open{display:flex;}
+.confirm-box{background:#fff;border-radius:18px;padding:24px 22px;width:100%;max-width:320px;text-align:center;}
+.confirm-box .ico{font-size:34px;}
+.confirm-box p{color:var(--s700);font-size:14px;font-weight:600;margin:10px 0 18px;line-height:1.5;white-space:pre-line;}
 </style>
 </head>
 <body>
@@ -141,9 +155,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
   <div class="card"><div class="card-title">📐 Dimensões do Rótulo</div>
     <div class="grid-3">
-      <div class="field"><label>Largura (mm)</label><input type="text" inputmode="decimal" id="largura" value="130"></div>
-      <div class="field"><label>Altura (mm)</label><input type="text" inputmode="decimal" id="altura" value="30"></div>
-      <div class="field"><label>Gap (mm)</label><input type="text" inputmode="decimal" id="gap" value="3"></div>
+      <div class="field"><label for="largura">Largura (mm)</label><input type="text" inputmode="decimal" id="largura" value="130"></div>
+      <div class="field"><label for="altura">Altura (mm)</label><input type="text" inputmode="decimal" id="altura" value="30"></div>
+      <div class="field"><label for="gap">Gap (mm)</label><input type="text" inputmode="decimal" id="gap" value="3"></div>
     </div>
   </div>
 
@@ -156,21 +170,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="rend-linha"><span>Área útil de impressão</span><b id="rend-area-util">0,9 m²</b></div>
     <div class="hint" style="margin-top:10px;">Conversor rápido — preencha um lado e veja o resultado no outro.</div>
     <div class="grid-2">
-      <div class="field"><label>Tenho (m²)</label><input type="text" inputmode="decimal" id="conv-m2" oninput="converterM2paraEtiquetas()" placeholder="Ex: 10"></div>
-      <div class="field"><label>Cabem (etiquetas)</label><div class="conv-result" id="conv-m2-result">—</div></div>
-      <div class="field"><label>Preciso (etiquetas)</label><input type="text" inputmode="decimal" id="conv-etiq" oninput="converterEtiquetasParaM2()" placeholder="Ex: 500"></div>
-      <div class="field"><label>Serão necessários (m²)</label><div class="conv-result" id="conv-etiq-result">—</div></div>
+      <div class="field"><label for="conv-m2">Tenho (m²)</label><input type="text" inputmode="decimal" id="conv-m2" oninput="converterM2paraEtiquetas()" placeholder="Ex: 10"></div>
+      <div class="field"><label>Cabem (etiquetas)</label><div class="conv-result" id="conv-m2-result" aria-live="polite">—</div></div>
+      <div class="field"><label for="conv-etiq">Preciso (etiquetas)</label><input type="text" inputmode="decimal" id="conv-etiq" oninput="converterEtiquetasParaM2()" placeholder="Ex: 500"></div>
+      <div class="field"><label>Serão necessários (m²)</label><div class="conv-result" id="conv-etiq-result" aria-live="polite">—</div></div>
     </div>
   </div>
 
   <div class="card"><div class="card-title">🏭 Produção</div>
     <div class="grid-2">
-      <div class="field"><label>Quantidade</label><input type="text" inputmode="numeric" id="quantidade" value="340"></div>
-      <div class="field"><label>Material</label><select id="material"></select></div>
+      <div class="field"><label for="quantidade">Quantidade</label><input type="text" inputmode="numeric" id="quantidade" value="340"></div>
+      <div class="field"><label for="material">Material</label><select id="material"></select></div>
     </div>
   </div>
 
-  <div class="card"><div class="card-title">🖨️ Modo de Impressão</div>
+  <v class="card-title">🖨️ Modo de Impressão</div>
     <div class="hint">Escolha a qualidade. Custos e velocidade são aplicados automaticamente na fórmula.</div>
     <div class="chips-wrap">
       <label class="modo-chip"><input type="radio" name="modo" value="Rascunho"><span class="mbox"><span class="mico">⚡</span>Rascunho<span class="msub">300×600</span></span></label>
@@ -222,6 +236,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <button class="btn btn-slate" onclick="limparFiltros()">🔄 LIMPAR</button>
     </div>
   </div>
+  <div id="hist-resumo"></div>
   <div class="card"><div class="card-title">📜 Cotações Realizadas</div><div id="lista-historico"></div></div>
   <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v16.0</span></div></div>
 </div>
@@ -229,8 +244,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div class="page" id="page-vend">
   <div class="card"><div class="card-title">➕ Novo Vendedor</div>
     <div class="grid-2">
-      <div class="field"><label>Nome</label><input type="text" id="vend-nome" placeholder="Ex: João Silva"></div>
-      <div class="field"><label>Comissão (%)</label><input type="text" inputmode="decimal" id="vend-comissao" placeholder="5"></div>
+      <div class="field"><label for="vend-nome">Nome</label><input type="text" id="vend-nome" placeholder="Ex: João Silva"></div>
+      <div class="field"><label for="vend-comissao">Comissão (%)</label><input type="text" inputmode="decimal" id="vend-comissao" placeholder="5"></div>
     </div>
     <button class="btn btn-dark" onclick="salvarVendedor()" style="margin-top:12px;">💾 SALVAR VENDEDOR</button>
     <div id="lista-vendedores" style="margin-top:14px;"></div>
@@ -240,10 +255,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <div class="page" id="page-admin">
   <div class="card"><div class="card-title">🧱 Matéria Prima</div>
-    <div class="field"><label>Nome do Material</label><input type="text" id="adm-nome" placeholder="Ex: BOPP BR. BRILHO" style="text-transform:uppercase;"></div>
+    <div class="field"><label for="adm-nome">Nome do Material</label><input type="text" id="adm-nome" placeholder="Ex: BOPP BR. BRILHO" style="text-transform:uppercase;"></div>
     <div class="grid-2">
-      <div class="field"><label>Valor Base (R$/m²)</label><input type="text" inputmode="decimal" id="adm-valor" placeholder="3.36"></div>
-      <div class="field"><label>ICMS (%)</label><input type="text" inputmode="decimal" id="adm-icms" placeholder="9.75"></div>
+      <div class="field"><label for="adm-valor">Valor Base (R$/m²)</label><input type="text" inputmode="decimal" id="adm-valor" placeholder="3.36"></div>
+      <div class="field"><label for="adm-icms">ICMS (%)</label><input type="text" inputmode="decimal" id="adm-icms" placeholder="9.75"></div>
     </div>
     <button class="btn btn-dark" onclick="salvarMaterial()" style="margin-top:12px;">💾 SALVAR MATERIAL</button>
     <div id="lista-materiais" style="margin-top:14px;"></div>
@@ -252,42 +267,45 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="card"><div class="card-title">🎨 Custo & Velocidade por Modo</div>
     <div class="hint">Tinta (R$/m²) e velocidade (m²/h) de cada modo. <b>Não aparecem na cotação</b> — usados só na fórmula.</div>
     <div class="grid-2">
-      <div class="field"><label>⚡ Rascunho — Tinta R$/m²</label><input type="text" inputmode="decimal" id="cfg-modo-rascunho"></div>
-      <div class="field"><label>⚡ Rascunho — m²/h</label><input type="text" inputmode="decimal" id="cfg-vel-rascunho"></div>
-      <div class="field"><label>🏭 Produção — Tinta R$/m²</label><input type="text" inputmode="decimal" id="cfg-modo-padrao"></div>
-      <div class="field"><label>🏭 Produção — m²/h</label><input type="text" inputmode="decimal" id="cfg-vel-padrao"></div>
-      <div class="field"><label>✨ Alta — Tinta R$/m²</label><input type="text" inputmode="decimal" id="cfg-modo-alta"></div>
-      <div class="field"><label>✨ Alta — m²/h</label><input type="text" inputmode="decimal" id="cfg-vel-alta"></div>
-      <div class="field"><label>💎 Máxima — Tinta R$/m²</label><input type="text" inputmode="decimal" id="cfg-modo-maxima"></div>
-      <div class="field"><label>💎 Máxima — m²/h</label><input type="text" inputmode="decimal" id="cfg-vel-maxima"></div>
+      <div class="field"><label for="cfg-modo-rascunho">⚡ Rascunho — Tinta R$/m²</label><input type="text" inputmode="decimal" id="cfg-modo-rascunho"></div>
+      <div class="field"><label for="cfg-vel-rascunho">⚡ Rascunho — m²/h</label><input type="text" inputmode="decimal" id="cfg-vel-rascunho"></div>
+      <div class="field"><label for="cfg-modo-padrao">🏭 Produção — Tinta R$/m²</label><input type="text" inputmode="decimal" id="cfg-modo-padrao"></div>
+      <div class="field"><label for="cfg-vel-padrao">🏭 Produção — m²/h</label><input type="text" inputmode="decimal" id="cfg-vel-padrao"></div>
+      <div class="field"><label for="cfg-modo-alta">✨ Alta — Tinta R$/m²</label><input type="text" inputmode="decimal" id="cfg-modo-alta"></div>
+      <div class="field"><label for="cfg-vel-alta">✨ Alta — m²/h</label><input type="text" inputmode="decimal" id="cfg-vel-alta"></div>
+      <div class="field"><label for="cfg-modo-maxima">💎 Máxima — Tinta R$/m²</label><input type="text" inputmode="decimal" id="cfg-modo-maxima"></div>
+      <div class="field"><label for="cfg-vel-maxima">💎 Máxima — m²/h</label><input type="text" inputmode="decimal" id="cfg-vel-maxima"></div>
     </div>
     <div class="grid-2">
-      <div class="field"><label>Branco Chapado 100% (R$/m²)</label><input type="text" inputmode="decimal" id="cfg-white"></div>
-      <div class="field"><label>Purga / Limpeza (%)</label><input type="text" inputmode="decimal" id="cfg-purga"></div>
+      <div class="field"><label for="cfg-white">Branco Chapado 100% (R$/m²)</label><input type="text" inputmode="decimal" id="cfg-white"></div>
+      <div class="field"><label for="cfg-purga">Purga / Limpeza (%)</label><input type="text" inputmode="decimal" id="cfg-purga"></div>
     </div>
   </div>
 
   <div class="card"><div class="card-title">⚙️ Parâmetros Gerais & Máquina</div>
     <div class="hint">💡 Máquina cobrada por <b>tempo</b>: Tempo = Área ÷ Velocidade do modo. Custo = Tempo × Hora Máquina.</div>
     <div class="grid-2">
-      <div class="field"><label>Margem Perda Material (%)</label><input type="text" inputmode="decimal" id="cfg-perda"></div>
-      <div class="field"><label>Hora Máquina (R$/h)</label><input type="text" inputmode="decimal" id="cfg-hora"></div>
-      <div class="field"><label>Área Útil de Impressão (m²)</label><input type="text" inputmode="decimal" id="cfg-area-util"></div>
-      <div class="field"><label>Empresa Padrão (%)</label><input type="text" inputmode="decimal" id="cfg-empresa"></div>
-      <div class="field"><label>Vendedor Padrão (%)</label><input type="text" inputmode="decimal" id="cfg-vendedor"></div>
+      <div class="field"><label for="cfg-perda">Margem Perda Material (%)</label><input type="text" inputmode="decimal" id="cfg-perda"></div>
+      <div class="field"><label for="cfg-hora">Hora Máquina (R$/h)</label><input type="text" inputmode="decimal" id="cfg-hora"></div>
+      <div class="field"><label for="cfg-area-util">Área Útil de Impressão (m²)</label><input type="text" inputmode="decimal" id="cfg-area-util"></div>
+      <div class="field"><label for="cfg-empresa">Empresa Padrão (%)</label><input type="text" inputmode="decimal" id="cfg-empresa"></div>
+      <div class="field"><label for="cfg-vendedor">Vendedor Padrão (%)</label><input type="text" inputmode="decimal" id="cfg-vendedor"></div>
     </div>
     <div class="hint" style="margin-top:4px;">💡 Área útil = porção de 1 m² realmente aproveitável para impressão (padrão: 0,9 m² = 90%).</div>
     <button class="btn btn-orange" onclick="salvarConfigs()" style="margin-top:12px;">💾 SALVAR CONFIGURAÇÕES</button>
   </div>
 
   <div class="card"><div class="card-title">🖼️ Logo da Empresa (PDF)</div>
-    <div class="field"><label>Upload da Logo (PNG/JPG máx 500KB)</label><input type="file" accept="image/*" onchange="uploadLogo(event)"></div>
+    <div class="field"><label for="file-logo">Upload da Logo (PNG/JPG máx 500KB)</label><input type="file" id="file-logo" accept="image/*" onchange="uploadLogo(event)"></div>
     <img id="logo-preview" class="logo-preview">
     <button class="btn btn-red" onclick="removerLogo()" style="margin-top:10px;">🗑️ REMOVER LOGO</button>
   </div>
   <div class="card"><div class="card-title">🔐 Segurança</div>
-    <div class="field"><label>Novo PIN (4-8 dígitos)</label><input type="password" inputmode="numeric" id="novo-pin" placeholder="••••"></div>
-    <button class="btn btn-slate" onclick="trocarPin()" style="margin-top:12px;">ALTERAR PIN</button>
+    <div class="field"><label for="novo-pin">Novo PIN (4-8 dígitos)</label><input type="password" inputmode="numeric" id="novo-pin" placeholder="••••"></div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn btn-slate" onclick="trocarPin()">ALTERAR PIN</button>
+      <button class="btn btn-dark" onclick="bloquearAdmin()">🔒 BLOQUEAR ADMIN</button>
+    </div>
   </div>
   <div class="card"><div class="card-title">💾 Backup</div>
     <div class="btn-row">
@@ -312,17 +330,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <div class="sheet-overlay" id="sheet-overlay" onclick="if(event.target===this)fecharSheet()">
   <div class="sheet"><div class="sheet-handle"></div>
-    <div class="sheet-head"><h2>📊 Resumo da <span>Cotação</span></h2><button class="btn-close" onclick="fecharSheet()">✕</button></div>
+    <div class="sheet-head"><h2>📊 Resumo da <span>Cotação</span></h2><button class="btn-close" onclick="fecharSheet()" aria-label="Fechar resumo">✕</button></div>
     <div class="sheet-body" id="sheet-body"></div>
   </div>
 </div>
 <div class="pin-overlay" id="pin-overlay">
   <div class="pin-box"><div class="lock">🔒</div><h3>Área Administrativa</h3><p>Digite o PIN (padrão: 1234)</p>
-    <input type="password" inputmode="numeric" id="pin-input" maxlength="8" onkeydown="if(event.key==='Enter')validarPin()">
+    <input type="password" inputmode="numeric" id="pin-input" maxlength="8" autocomplete="off" onkeydown="if(event.key==='Enter')validarPin()">
+    <div class="pin-status" id="pin-status" role="alert"></div>
     <div class="pin-btns"><button class="btn btn-slate" onclick="cancelarPin()">Cancelar</button><button class="btn btn-orange" onclick="validarPin()">Entrar</button></div>
   </div>
 </div>
-<div class="toast" id="toast"></div>
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-msg">
+    <div class="ico">⚠️</div>
+    <p id="confirm-msg">Confirmar?</p>
+    <div class="pin-btns"><button class="btn btn-slate" id="confirm-no">Cancelar</button><button class="btn btn-red" id="confirm-yes">Confirmar</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 'use strict';
@@ -344,20 +370,25 @@ const DEFAULTS={
     whiteChapada:16.00,horaMaquina:25,
     areaUtilImpressao:0.9,
     empresaPadrao:15,vendedorPadrao:5},
-  pin:'1234',vendedores:[],historico:[],logo:''
+  pin:'1234',vendedores:[],historico:[],logo:'',versao:16
 };
 function clone(o){return JSON.parse(JSON.stringify(o));}
 function normalizeKeys(obj){if(obj===null||typeof obj!=='object')return obj;if(Array.isArray(obj))return obj.map(normalizeKeys);const c={};for(const k in obj){if(!obj.hasOwnProperty(k))continue;c[k.trim()]=normalizeKeys(obj[k]);}return c;}
+function migrate(d){if(!d.versao)d.versao=16;/* futuras migrações: if(d.versao<17){...} */return d;}
 
 let cloudMode=false,dbRef=null,lastPushed='';
 const cloudConfigured=!!(FIREBASE_CONFIG.databaseURL&&FIREBASE_CONFIG.databaseURL.indexOf('SEU-PROJETO')===-1);
-function initCloud(){
+function loadScript(src){return new Promise((ok,fail)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=fail;document.head.appendChild(s);});}
+async function initCloud(){
   if(!cloudConfigured){setSyncBadge(false);atualizarNotaStorage();return;}
-  try{firebase.initializeApp(FIREBASE_CONFIG);dbRef=firebase.database().ref('data');cloudMode=true;setSyncBadge(true);atualizarNotaStorage();
+  try{
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js');
+    firebase.initializeApp(FIREBASE_CONFIG);dbRef=firebase.database().ref('data');cloudMode=true;setSyncBadge(true);atualizarNotaStorage();
     dbRef.once('value',s=>{if(!s.val())dbRef.set(loadDB());}).then(()=>{
-      dbRef.on('value',s=>{const v=normalizeKeys(s.val()||{});if(!v||!v.materiais)return;const n=normalizeCloud(v);const j=JSON.stringify(n);if(j===lastPushed)return;lastPushed=j;try{localStorage.setItem(KEY,j);}catch(e){}renderAll();pulseSync();});
+      dbRef.on('value',s=>{const v=normalizeKeys(s.val()||{});if(!v||!v.materiais)return;const n=normalizeCloud(v);const j=JSON.stringify(n);if(j===lastPushed)return;lastPushed=j;try{localStorage.setItem(KEY,j);}catch(e){}_db=n;renderAll();pulseSync();});
     });
-  }catch(e){cloudMode=false;setSyncBadge(false);atualizarNotaStorage();}
+  }catch(e){cloudMode=false;dbRef=null;setSyncBadge(false);atualizarNotaStorage();toast('☁️ Firebase indisponível — modo local',true);}
 }
 function normalizeCloud(v){
   const b=clone(DEFAULTS);let m=v.materiais;if(!Array.isArray(m))m=Object.values(m||{});m=m.filter(x=>x&&x.nome).map(x=>({nome:String(x.nome).trim().toUpperCase(),valor:Number(x.valor)||0,icms:Number(x.icms)||0}));
@@ -370,13 +401,26 @@ function setSyncBadge(c){const b=document.getElementById('sync-badge');if(c){b.t
 function pulseSync(){const b=document.getElementById('sync-badge');b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse');}
 function atualizarNotaStorage(){const e=document.getElementById('storage-note');if(!e)return;e.innerHTML=cloudMode?'☁️ <b>Sincronização ativa</b>':'📴 <b>Modo local</b>';}
 
-function loadDB(){try{const r=JSON.parse(localStorage.getItem(KEY));const d=normalizeKeys(r||{});if(d&&d.materiais&&d.configs){const b=clone(DEFAULTS);for(const k in b.configs){if(d.configs[k]===undefined)d.configs[k]=b.configs[k];}if(!d.pin)d.pin='1234';if(!d.vendedores)d.vendedores=[];if(!d.historico)d.historico=[];if(!d.logo)d.logo='';return d;}}catch(e){}return clone(DEFAULTS);}
-function saveDB(d){lastPushed=JSON.stringify(d);try{localStorage.setItem(KEY,JSON.stringify(d));}catch(e){}if(cloudMode&&dbRef){dbRef.set(d).then(()=>pulseSync()).catch(()=>toast('☁️ Erro sync',true));}return true;}
+let _db=null;
+function loadDB(){
+  if(_db)return _db;
+  try{const r=JSON.parse(localStorage.getItem(KEY));const d=normalizeKeys(r||{});if(d&&d.materiais&&d.configs){const b=clone(DEFAULTS);for(const k in b.configs){if(d.configs[k]===undefined)d.configs[k]=b.configs[k];}if(!d.pin)d.pin='1234';if(!d.vendedores)d.vendedores=[];if(!d.historico)d.historico=[];if(!d.logo)d.logo='';_db=migrate(d);return _db;}}catch(e){}
+  _db=clone(DEFAULTS);return _db;
+}
+function saveDB(d){_db=d;lastPushed=JSON.stringify(d);try{localStorage.setItem(KEY,JSON.stringify(d));}catch(e){}if(cloudMode&&dbRef){dbRef.set(d).then(()=>pulseSync()).catch(()=>toast('☁️ Erro sync',true));}return true;}
 
 function parseNum(v){if(typeof v==='number')return v;let s=String(v==null?'':v).trim();if(!s)return NaN;const hd=s.indexOf('.')!==-1,hc=s.indexOf(',')!==-1;if(hd&&hc)s=s.replace(/\./g,'').replace(',','.');else if(hc)s=s.replace(',','.');return parseFloat(s);}
 function brl(n,d){if(d===undefined)d=2;return'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});}
 function fmtTempo(h){if(h<1)return Math.round(h*60)+' min';return h.toFixed(2).replace('.',',')+' h';}
 function toast(m,e){const t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(e?' err':'');clearTimeout(t._tm);t._tm=setTimeout(()=>{t.className='toast';},2800);}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+const r2=v=>Math.round((v+Number.EPSILON)*100)/100;
+const r4=v=>Math.round((v+Number.EPSILON)*10000)/10000;
+function csvCell(v){const s=String(v==null?'':v);return /^[=+\-@\t]/.test(s)?"'"+s:s;}
+let _lastId=0;
+function novoId(){let id=Date.now()*1000;if(id<=_lastId)id=_lastId+1;_lastId=id;return id;}
+function parseDataBr(s){const p=String(s==null?'':s).trim().split(/[\/\-T ]/).map(Number).filter(n=>!isNaN(n));if(p.length>=3){if(p[0]>31)return new Date(p[0],p[1]-1,p[2]);return new Date(p[2],p[1]-1,p[0]);}const d=new Date(s);return isNaN(d.getTime())?null:d;}
+function askConfirm(msg){return new Promise(res=>{const ov=document.getElementById('confirm-overlay');if(!ov){res(window.confirm(msg));return;}document.getElementById('confirm-msg').textContent=msg;ov.classList.add('open');const yes=document.getElementById('confirm-yes'),no=document.getElementById('confirm-no');const done=v=>{ov.classList.remove('open');yes.onclick=no.onclick=null;ov.onclick=null;document.removeEventListener('keydown',key,false);res(v);};const key=e=>{if(e.key==='Escape')done(false);else if(e.key==='Enter')done(true);};yes.onclick=()=>done(true);no.onclick=()=>done(false);ov.onclick=e=>{if(e.target===ov)done(false);};document.addEventListener('keydown',key,false);setTimeout(()=>yes.focus(),60);});}
 
 function toggleWhiteCov(){document.getElementById('white-cov-wrap').classList.toggle('show',document.getElementById('cor-white').checked);}
 
@@ -406,6 +450,7 @@ function calcularRendimento(){
   }
   converterM2paraEtiquetas();
   converterEtiquetasParaM2();
+  desenharPreview();
 }
 function converterM2paraEtiquetas(){
   const m2=parseNum(document.getElementById('conv-m2').value);
@@ -424,8 +469,34 @@ function converterEtiquetasParaM2(){
   const m2Necessarios=(etiq*areaUnit)/areaUtil;
   res.textContent=m2Necessarios.toFixed(3).replace('.',',')+' m²';
 }
+function desenharPreview(){
+  const host=document.getElementById('label-preview');if(!host)return;
+  const l=parseNum(document.getElementById('largura').value)||0;
+  const a=parseNum(document.getElementById('altura').value)||0;
+  const g=parseNum(document.getElementById('gap').value)||0;
+  if(l<=0||a<=0||l>3000||a>3000){host.innerHTML='';return;}
+  const W=l+2*g,H=a+2*g;
+  const pad=Math.max(W,H)*0.08+4,txtH=15;
+  const vw=W+pad*2,vh=H+pad*2+txtH;
+  const sw=Math.max(W,H)*0.012+0.4,da=Math.max(W,H)*0.03,db=Math.max(W,H)*0.02;
+  const f=v=>String(Math.round(v*100)/100).replace('.',',');
+  host.innerHTML='<svg viewBox="0 0 '+vw+' '+vh+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Prévia da etiqueta com gap">'
+    +'<rect x="'+pad+'" y="'+pad+'" width="'+W+'" height="'+H+'" rx="2" fill="#FFF7ED" stroke="#F97316" stroke-width="'+sw+'" stroke-dasharray="'+da+','+db+'"/>'
+    +'<rect x="'+(pad+g)+'" y="'+(pad+g)+'" width="'+l+'" height="'+a+'" rx="1" fill="#F97316"/>'
+    +'<text x="'+(vw/2)+'" y="'+(vh-2)+'" text-anchor="middle" font-size="'+(txtH*0.74)+'" font-weight="700" fill="#64748B">'+f(l)+' × '+f(a)+' mm'+(g>0?' · gap '+f(g):'')+'</text>'
+    +'</svg>';
+}
 
-let adminUnlocked=false,editingMaterial=null,editingVendedor=null;
+let adminUnlocked=false,pinTentativas=0,pinLockAte=0,pinCdTimer=null,editingMaterial=null,editingVendedor=null;
+async function sha256Hex(t){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+const pinHasHash=()=>typeof crypto!=='undefined'&&!!crypto.subtle;
+function pinBlocked(){return Date.now()<pinLockAte;}
+function startPinCountdown(){
+  const st=document.getElementById('pin-status'),inp=document.getElementById('pin-input');
+  clearInterval(pinCdTimer);
+  const upd=()=>{const s=Math.ceil((pinLockAte-Date.now())/1000);if(s<=0){clearInterval(pinCdTimer);st.textContent='';inp.disabled=false;return;}st.textContent='🔒 Bloqueado — aguarde '+s+'s';inp.disabled=true;};
+  upd();pinCdTimer=setInterval(upd,500);
+}
 function goPage(p){
   if(p==='admin'&&!adminUnlocked){document.getElementById('pin-overlay').classList.add('open');setTimeout(()=>document.getElementById('pin-input').focus(),200);return;}
   ['user','hist','vend','admin'].forEach(x=>{document.getElementById('page-'+x).classList.toggle('active',x===p);document.getElementById('nav-'+x).classList.toggle('active',x===p);});
@@ -434,23 +505,45 @@ function goPage(p){
   if(p==='vend')renderVendedores();
   if(p==='admin')carregarLogoPreview();
 }
-function validarPin(){const v=document.getElementById('pin-input').value;if(v===String(loadDB().pin)){adminUnlocked=true;document.getElementById('pin-overlay').classList.remove('open');document.getElementById('pin-input').value='';goPage('admin');toast('🔓 Admin desbloqueado');}else{toast('❌ PIN incorreto!',true);document.getElementById('pin-input').value='';if(navigator.vibrate)navigator.vibrate(80);}}
+async function validarPin(){
+  const inp=document.getElementById('pin-input');
+  if(pinBlocked()){startPinCountdown();return;}
+  const v=(inp.value||'').trim();
+  if(!v)return;
+  const d=loadDB();const stored=String(d.pin);
+  let ok=false;
+  if(stored.indexOf('sha256:')===0){ok=pinHasHash()?('sha256:'+await sha256Hex(v))===stored:false;}
+  else ok=(v===stored);
+  if(ok){
+    adminUnlocked=true;pinTentativas=0;
+    if(stored.indexOf('sha256:')!==0&&pinHasHash()){d.pin='sha256:'+await sha256Hex(v);saveDB(d);}
+    document.getElementById('pin-overlay').classList.remove('open');
+    inp.value='';
+    goPage('admin');toast('🔓 Admin desbloqueado');
+  }else{
+    pinTentativas++;inp.value='';
+    if(navigator.vibrate)navigator.vibrate(80);
+    if(pinTentativas>=5){pinLockAte=Date.now()+30000;pinTentativas=0;startPinCountdown();toast('🔒 Muitas tentativas — aguarde 30s',true);}
+    else toast('❌ PIN incorreto! ('+(5-pinTentativas)+' tentativas)',true);
+  }
+}
 function cancelarPin(){document.getElementById('pin-overlay').classList.remove('open');document.getElementById('pin-input').value='';}
-function trocarPin(){const v=document.getElementById('novo-pin').value;if(!/^\d{4,8}$/.test(v)){toast('⚠️ 4-8 dígitos',true);return;}const d=loadDB();d.pin=v;saveDB(d);toast('🔐 PIN alterado!');document.getElementById('novo-pin').value='';}
+function bloquearAdmin(){adminUnlocked=false;const pg=document.getElementById('page-admin');if(pg&&pg.classList.contains('active'))goPage('user');toast('🔒 Admin bloqueado');}
+async function trocarPin(){const v=document.getElementById('novo-pin').value;if(!/^\d{4,8}$/.test(v)){toast('⚠️ 4-8 dígitos',true);return;}const d=loadDB();d.pin=pinHasHash()?'sha256:'+await sha256Hex(v):v;saveDB(d);toast('🔐 PIN alterado!');document.getElementById('novo-pin').value='';}
 
-function renderMateriais(){const d=loadDB();const s=document.getElementById('material');const l=document.getElementById('lista-materiais');const a=s.value;s.innerHTML='';l.innerHTML='';d.materiais.forEach((m,i)=>{const o=document.createElement('option');o.value=m.nome;o.textContent=m.nome;s.appendChild(o);const c=(m.valor*(1+m.icms/100)).toFixed(2);const div=document.createElement('div');div.className='mat-item';div.innerHTML='<div><div class="mat-name">'+m.nome+'</div><div class="mat-sub">R$ '+m.valor.toFixed(2)+' + '+m.icms+'% → <b>R$ '+c+'/m²</b></div></div><div><button class="btn-mini edit" onclick="editarMaterial('+i+')">✏️</button> <button class="btn-mini del" onclick="excluirMaterial('+i+')">🗑️</button></div>';l.appendChild(div);});if(a&&d.materiais.some(m=>m.nome===a))s.value=a;}
+function renderMateriais(){const d=loadDB();const s=document.getElementById('material');const l=document.getElementById('lista-materiais');const a=s.value;s.innerHTML='';l.innerHTML='';d.materiais.forEach((m,i)=>{const o=document.createElement('option');o.value=m.nome;o.textContent=m.nome;s.appendChild(o);const c=(m.valor*(1+m.icms/100)).toFixed(2);const div=document.createElement('div');div.className='mat-item';div.innerHTML='<div><div class="mat-name">'+esc(m.nome)+'</div><div class="mat-sub">R$ '+m.valor.toFixed(2)+' + '+m.icms+'% → <b>R$ '+c+'/m²</b></div></div><div><button class="btn-mini edit" aria-label="Editar '+esc(m.nome)+'" onclick="editarMaterial('+i+')">✏️</button> <button class="btn-mini del" aria-label="Excluir '+esc(m.nome)+'" onclick="excluirMaterial('+i+')">🗑️</button></div>';l.appendChild(div);});if(a&&d.materiais.some(m=>m.nome===a))s.value=a;}
 function salvarMaterial(){const n=document.getElementById('adm-nome').value.toUpperCase().trim();const v=parseNum(document.getElementById('adm-valor').value);const ic=parseNum(document.getElementById('adm-icms').value);if(!n||isNaN(v)||isNaN(ic)){toast('⚠️ Preencha tudo',true);return;}const d=loadDB();if(editingMaterial!==null&&editingMaterial!==n)d.materiais=d.materiais.filter(m=>m.nome!==editingMaterial);const idx=d.materiais.findIndex(m=>m.nome===n);if(idx>=0)d.materiais[idx]={nome:n,valor:v,icms:ic};else d.materiais.push({nome:n,valor:v,icms:ic});saveDB(d);toast('✅ Salvo!');editingMaterial=null;document.getElementById('adm-nome').value='';document.getElementById('adm-valor').value='';document.getElementById('adm-icms').value='';renderMateriais();}
 function editarMaterial(i){const m=loadDB().materiais[i];if(!m)return;editingMaterial=m.nome;document.getElementById('adm-nome').value=m.nome;document.getElementById('adm-valor').value=m.valor;document.getElementById('adm-icms').value=m.icms;toast('📝 Editando "'+m.nome+'"');window.scrollTo({top:0,behavior:'smooth'});}
-function excluirMaterial(i){const d=loadDB();const m=d.materiais[i];if(!m||!confirm('Excluir "'+m.nome+'"?'))return;d.materiais.splice(i,1);saveDB(d);toast('🗑️ Excluído');renderMateriais();}
+async function excluirMaterial(i){const d=loadDB();const m=d.materiais[i];if(!m||!(await askConfirm('Excluir "'+m.nome+'"?')))return;d.materiais.splice(i,1);saveDB(d);toast('🗑️ Excluído');renderMateriais();}
 
-function renderVendedores(){const d=loadDB();const l=document.getElementById('lista-vendedores');const s=document.getElementById('vendedor-select');l.innerHTML='';const a=s.value;s.innerHTML='<option value="">— Sem vendedor (padrão) —</option>';d.vendedores.forEach((v,i)=>{const o=document.createElement('option');o.value=v.nome;o.textContent=v.nome+' ('+v.comissao+'%)';s.appendChild(o);const div=document.createElement('div');div.className='vend-item';div.innerHTML='<div><div class="vend-name">'+v.nome+'</div><div class="vend-sub">Comissão: <b>'+v.comissao+'%</b></div></div><div><button class="btn-mini edit" onclick="editarVendedor('+i+')">✏️</button> <button class="btn-mini del" onclick="excluirVendedor('+i+')">🗑️</button></div>';l.appendChild(div);});if(a&&d.vendedores.some(x=>x.nome===a))s.value=a;}
+function renderVendedores(){const d=loadDB();const l=document.getElementById('lista-vendedores');const s=document.getElementById('vendedor-select');l.innerHTML='';const a=s.value;s.innerHTML='<option value="">— Sem vendedor (padrão) —</option>';d.vendedores.forEach((v,i)=>{const o=document.createElement('option');o.value=v.nome;o.textContent=v.nome+' ('+v.comissao+'%)';s.appendChild(o);const div=document.createElement('div');div.className='vend-item';div.innerHTML='<div><div class="vend-name">'+esc(v.nome)+'</div><div class="vend-sub">Comissão: <b>'+v.comissao+'%</b></div></div><div><button class="btn-mini edit" aria-label="Editar '+esc(v.nome)+'" onclick="editarVendedor('+i+')">✏️</button> <button class="btn-mini del" aria-label="Excluir '+esc(v.nome)+'" onclick="excluirVendedor('+i+')">🗑️</button></div>';l.appendChild(div);});if(a&&d.vendedores.some(x=>x.nome===a))s.value=a;}
 function salvarVendedor(){const n=document.getElementById('vend-nome').value.trim();const c=parseNum(document.getElementById('vend-comissao').value);if(!n||isNaN(c)||c<0||c>100){toast('⚠️ Nome e comissão válidos',true);return;}const d=loadDB();if(editingVendedor!==null&&editingVendedor!==n)d.vendedores=d.vendedores.filter(v=>v.nome!==editingVendedor);const idx=d.vendedores.findIndex(v=>v.nome===n);if(idx>=0)d.vendedores[idx]={nome:n,comissao:c};else d.vendedores.push({nome:n,comissao:c});saveDB(d);toast('✅ Vendedor salvo!');editingVendedor=null;document.getElementById('vend-nome').value='';document.getElementById('vend-comissao').value='';renderVendedores();}
 function editarVendedor(i){const v=loadDB().vendedores[i];if(!v)return;editingVendedor=v.nome;document.getElementById('vend-nome').value=v.nome;document.getElementById('vend-comissao').value=v.comissao;toast('📝 Editando "'+v.nome+'"');}
-function excluirVendedor(i){const d=loadDB();const v=d.vendedores[i];if(!v||!confirm('Excluir "'+v.nome+'"?'))return;d.vendedores.splice(i,1);saveDB(d);toast('🗑️ Excluído');renderVendedores();}
+async function excluirVendedor(i){const d=loadDB();const v=d.vendedores[i];if(!v||!(await askConfirm('Excluir "'+v.nome+'"?')))return;d.vendedores.splice(i,1);saveDB(d);toast('🗑️ Excluído');renderVendedores();}
 function aplicarComissaoVendedor(){const n=document.getElementById('vendedor-select').value;const d=loadDB();const v=d.vendedores.find(x=>x.nome===n);document.getElementById('vendedor').value=v?v.comissao:d.configs.vendedorPadrao;if(v)toast('👤 '+v.comissao+'% → '+v.nome);}
 
 function uploadLogo(ev){const f=ev.target.files[0];if(!f)return;if(f.size>500000){toast('⚠️ Imagem muito grande (máx 500KB)',true);return;}const r=new FileReader();r.onload=e=>{const d=loadDB();d.logo=e.target.result;saveDB(d);carregarLogoPreview();toast('🖼️ Logo salva!');};r.readAsDataURL(f);ev.target.value='';}
-function removerLogo(){if(!confirm('Remover logo?'))return;const d=loadDB();d.logo='';saveDB(d);carregarLogoPreview();toast('🗑️ Logo removida');}
+async function removerLogo(){if(!(await askConfirm('Remover a logo?')))return;const d=loadDB();d.logo='';saveDB(d);carregarLogoPreview();toast('🗑️ Logo removida');}
 function carregarLogoPreview(){const d=loadDB();const img=document.getElementById('logo-preview');if(d.logo){img.src=d.logo;img.style.display='block';}else{img.style.display='none';}}
 
 function popularFiltroVendedores(){const d=loadDB();const s=document.getElementById('hist-filtro-vend');const a=s.value;s.innerHTML='<option value="">Todos os vendedores</option>';const noms=[...new Set(d.historico.map(h=>h.vendedor).filter(x=>x&&x!=='—'))];noms.sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;s.appendChild(o);});if(a)s.value=a;}
@@ -459,28 +552,46 @@ function getHistoricoFiltrado(){
   const fv=document.getElementById('hist-filtro-vend').value;
   const di=document.getElementById('hist-data-ini').value;
   const df=document.getElementById('hist-data-fim').value;
+  const bs=document.getElementById('hist-busca');
+  const busca=bs?(bs.value||'').trim().toLowerCase():'';
   if(fv)h=h.filter(x=>x.vendedor===fv);
-  if(di){const dMin=new Date(di.split('-').reverse().join('-'));h=h.filter(x=>{const p=x.dataBr||x.data;const dp=new Date(p.split('/').reverse().join('-'));return dp>=dMin;});}
-  if(df){const dMax=new Date(df.split('-').reverse().join('-'));dMax.setHours(23,59,59);h=h.filter(x=>{const p=x.dataBr||x.data;const dp=new Date(p.split('/').reverse().join('-'));return dp<=dMax;});}
+  if(di){const p=di.split('-').map(Number);const dMin=new Date(p[0],p[1]-1,p[2]);h=h.filter(x=>{const dp=parseDataBr(x.dataBr||x.data);return dp&&dp>=dMin;});}
+  if(df){const p=df.split('-').map(Number);const dMax=new Date(p[0],p[1]-1,p[2],23,59,59,999);h=h.filter(x=>{const dp=parseDataBr(x.dataBr||x.data);return dp&&dp<=dMax;});}
+  if(busca)h=h.filter(x=>((x.material||'')+' '+(x.vendedor||'')+' '+(x.modo||'')+' '+x.largura+'x'+x.altura).toLowerCase().indexOf(busca)>=0);
   return h.sort((a,b)=>b.id-a.id);
+}
+function renderResumo(h){
+  const el=document.getElementById('hist-resumo');if(!el)return;
+  if(!h.length){el.innerHTML='';return;}
+  const tot=h.reduce((s,x)=>s+(Number(x.precoTotal)||0),0);
+  const por={};h.forEach(x=>{const v=x.vendedor||'—';if(!por[v])por[v]={s:0,n:0};por[v].s+=Number(x.precoTotal)||0;por[v].n++;});
+  let html='<div class="card"><div class="card-title">📊 Resumo do Período</div>'
+    +'<div class="rz-linha"><span>Cotações no período</span><b>'+h.length+'</b></div>'
+    +'<div class="rz-linha"><span>Total cotado</span><b>'+brl(tot)+'</b></div>';
+  const rows=Object.keys(por).sort((a,b)=>por[b].s-por[a].s);
+  if(rows.length)html+='<div class="r-sec" style="margin-top:12px;">Por vendedor</div>';
+  rows.forEach(v=>{html+='<div class="rz-linha"><span>'+esc(v==='—'?'Sem vendedor':v)+'</span><b>'+brl(por[v].s)+' <span class="rz-qtd">('+por[v].n+')</span></b></div>';});
+  html+='<div class="rz-total"><span>TOTAL GERAL</span><span>'+brl(tot)+'</span></div></div>';
+  el.innerHTML=html;
 }
 function renderHistorico(){
   const lista=document.getElementById('lista-historico');lista.innerHTML='';
   const h=getHistoricoFiltrado();
+  renderResumo(h);
   if(!h.length){lista.innerHTML='<div class="empty-state"><div class="icon">📭</div><p>Nenhuma cotação encontrada.</p></div>';return;}
-  h.forEach(item=>{const div=document.createElement('div');div.className='hist-item';div.innerHTML='<div class="hist-info"><div class="hist-top"><span class="hist-data">'+item.data+(item.modo?' · '+item.modo:'')+'</span><span class="hist-vend">'+(item.vendedor||'—')+'</span></div><div class="hist-spec">'+item.largura+'×'+item.altura+'mm · '+item.quantidade+' un · '+item.material+'</div><div class="hist-price">'+brl(item.precoTotal)+'</div></div><div class="hist-actions"><button class="btn-mini edit" onclick="reabrirCotacao('+item.id+')">📂</button><button class="btn-mini del" onclick="excluirCotacao('+item.id+')">🗑️</button></div>';lista.appendChild(div);});
+  h.forEach(item=>{const div=document.createElement('div');div.className='hist-item';div.innerHTML='<div class="hist-info"><div class="hist-top"><span class="hist-data">'+esc(item.data)+(item.modo?' · '+esc(item.modo):'')+'</span><span class="hist-vend">'+esc(item.vendedor||'—')+'</span></div><div class="hist-spec">'+item.largura+'×'+item.altura+'mm · '+item.quantidade+' un · '+esc(item.material)+'</div><div class="hist-price">'+brl(item.precoTotal)+'</div></div><div class="hist-actions"><button class="btn-mini edit" aria-label="Reabrir cotação" onclick="reabrirCotacao('+item.id+')">📂</button><button class="btn-mini del" aria-label="Excluir cotação" onclick="excluirCotacao('+item.id+')">🗑️</button></div>';lista.appendChild(div);});
 }
-function limparFiltros(){document.getElementById('hist-filtro-vend').value='';document.getElementById('hist-data-ini').value='';document.getElementById('hist-data-fim').value='';renderHistorico();}
+function limparFiltros(){document.getElementById('hist-filtro-vend').value='';document.getElementById('hist-data-ini').value='';document.getElementById('hist-data-fim').value='';const b=document.getElementById('hist-busca');if(b)b.value='';renderHistorico();}
 function salvarNoHistorico(c){const d=loadDB();d.historico.push(c);if(d.historico.length>200)d.historico.shift();saveDB(d);}
 function reabrirCotacao(id){const d=loadDB();const h=d.historico.find(x=>x.id===id);if(!h)return;document.getElementById('largura').value=h.largura;document.getElementById('altura').value=h.altura;document.getElementById('gap').value=h.gap;document.getElementById('quantidade').value=h.quantidade;document.getElementById('material').value=h.material;document.getElementById('vendedor').value=h.pctVendedor;document.getElementById('empresa').value=h.pctEmpresa;document.getElementById('frete').value=h.frete;if(h.modoKey){const radio=document.querySelector('input[name="modo"][value="'+h.modoKey+'"]');if(radio)radio.checked=true;}calcularRendimento();goPage('user');toast('📂 Cotação carregada');}
-function excluirCotacao(id){if(!confirm('Excluir esta cotação?'))return;const d=loadDB();d.historico=d.historico.filter(x=>x.id!==id);saveDB(d);renderHistorico();toast('🗑️ Excluída');}
+async function excluirCotacao(id){if(!(await askConfirm('Excluir esta cotação?')))return;const d=loadDB();d.historico=d.historico.filter(x=>x.id!==id);saveDB(d);renderHistorico();toast('🗑️ Excluída');}
 
 function exportarCSV(){
   const h=getHistoricoFiltrado();
   if(!h.length){toast('⚠️ Nada para exportar',true);return;}
   const sep=';';
   const header=['Data','Vendedor','Largura','Altura','Gap','Quantidade','Material','Modo','Cores','Área c/Perda','Tempo Produção','Custo Máquina','Custo Tiragem','Empresa %','Empresa R$','Vendedor %','Vendedor R$','Frete','Preço Total','Preço Unit'];
-  const rows=h.map(x=>[x.data,x.vendedor||'',x.largura,x.altura,x.gap,x.quantidade,x.material,x.modo||'',(x.canais||[]).join('+'),(x.areaPerda||0).toFixed(3),(x.tempoProducao||0).toFixed(2),(x.custoMaquina||0).toFixed(2),(x.custoTiragem||0).toFixed(2),x.pctEmpresa,(x.valEmpresa||0).toFixed(2),x.pctVendedor,(x.valVendedor||0).toFixed(2),(x.frete||0).toFixed(2),(x.precoTotal||0).toFixed(2),(x.precoUnit||0).toFixed(4)]);
+  const rows=h.map(x=>[csvCell(x.data),csvCell(x.vendedor||''),x.largura,x.altura,x.gap,x.quantidade,csvCell(x.material),csvCell(x.modo||''),csvCell((x.canais||[]).join('+')),(x.areaPerda||0).toFixed(3),(x.tempoProducao||0).toFixed(2),(x.custoMaquina||0).toFixed(2),(x.custoTiragem||0).toFixed(2),x.pctEmpresa,(x.valEmpresa||0).toFixed(2),x.pctVendedor,(x.valVendedor||0).toFixed(2),(x.frete||0).toFixed(2),(x.precoTotal||0).toFixed(2),(x.precoUnit||0).toFixed(4)]);
   const csv='\uFEFF'+[header.join(sep),...rows.map(r=>r.join(sep))].join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='historico_cotacoes_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(a.href);
@@ -531,9 +642,9 @@ function salvarConfigs(){
   saveDB(d);toast('✅ Configurações salvas!');carregarConfigs();
 }
 
-function exportarBackup(){const d=loadDB();const dados={versao:16,dataExportacao:new Date().toLocaleString('pt-BR'),materiais:d.materiais,configs:d.configs,vendedores:d.vendedores,logo:d.logo};const b=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='backup_calculadora_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(a.href);toast('⬇️ Backup exportado!');}
-function importarBackup(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const raw=JSON.parse(e.target.result);const d=normalizeKeys(raw);if(!d.materiais||!d.configs)throw 0;const db=loadDB();db.materiais=d.materiais;db.configs=d.configs;if(d.vendedores)db.vendedores=d.vendedores;if(d.logo)db.logo=d.logo;saveDB(db);renderAll();toast('⬆️ Backup importado!');}catch(x){toast('❌ Arquivo inválido!',true);}};r.readAsText(f);ev.target.value='';}
-function restaurarPadroes(){if(!confirm('Restaurar fábrica?'))return;saveDB(clone(DEFAULTS));renderAll();toast('🔄 Restaurado');}
+function exportarBackup(){const d=loadDB();const dados={versao:17,dataExportacao:new Date().toLocaleString('pt-BR'),materiais:d.materiais,configs:d.configs,vendedores:d.vendedores,logo:d.logo,historico:d.historico,pin:d.pin};const b=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='backup_calculadora_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(a.href);toast('⬇️ Backup exportado!');}
+function importarBackup(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const raw=JSON.parse(e.target.result);const d=normalizeKeys(raw);if(!d.materiais||!d.configs)throw 0;const db=loadDB();db.materiais=d.materiais;db.configs=d.configs;if(d.vendedores)db.vendedores=d.vendedores;if(d.logo)db.logo=d.logo;if(Array.isArray(d.historico))db.historico=d.historico;if(d.pin)db.pin=String(d.pin);saveDB(db);renderAll();toast('⬆️ Backup importado!');}catch(x){toast('❌ Arquivo inválido!',true);}};r.readAsText(f);ev.target.value='';}
+async function restaurarPadroes(){if(!(await askConfirm('Restaurar configurações de fábrica?\nSeu histórico e PIN serão mantidos.')))return;const atual=loadDB();const d=clone(DEFAULTS);d.historico=atual.historico||[];d.pin=atual.pin||'1234';saveDB(d);renderAll();toast('🔄 Padrões restaurados (histórico mantido)');}
 function renderAll(){renderMateriais();renderVendedores();renderHistorico();carregarConfigs();carregarLogoPreview();calcularRendimento();}
 
 // ===== CÁLCULO =====
@@ -573,7 +684,8 @@ function calcular(){
   const pctEmp=parseNum(document.getElementById('empresa').value)||0;
   const frete=parseNum(document.getElementById('frete').value)||0;
 
-  if([largura,altura,gap,qtd].some(v=>isNaN(v))||qtd<=0){toast('⚠️ Preencha dimensões e quantidade',true);return;}
+  if([largura,altura,gap,qtd].some(v=>isNaN(v))||largura<=0||altura<=0||gap<0||qtd<=0){toast('⚠️ Dimensões e quantidade devem ser positivas',true);return;}
+  if(pctVend<0||pctVend>100||pctEmp<0||pctEmp>100||frete<0){toast('⚠️ Percentuais entre 0 e 100 e frete ≥ 0',true);return;}
   const mat=d.materiais.find(m=>m.nome===matNome);
   if(!mat){toast('⚠️ Material não encontrado',true);return;}
   if(canais.length===0){toast('⚠️ Selecione ao menos uma cor',true);return;}
@@ -587,22 +699,22 @@ function calcular(){
   const valPurga=subTinta*(cfg.purga/100);
   const cTin=subTinta+valPurga;
   const custoVarM2=cMat+cTin;
-  const custoVarTotal=custoVarM2*areaP;
+  const custoVarTotal=r2(custoVarM2*areaP);
 
   const tempoProducao=areaP/velModo;
-  const custoMaquinaTotal=tempoProducao*cfg.horaMaquina;
+  const custoMaquinaTotal=r2(tempoProducao*cfg.horaMaquina);
 
-  const cTir=custoVarTotal+custoMaquinaTotal;
-  const cUni=cTir/qtd;
-  const vEmp=cTir*pctEmp/100;const vVend=cTir*pctVend/100;
-  const pTot=cTir+vEmp+vVend+frete;const pUni=pTot/qtd;
+  const cTir=r2(custoVarTotal+custoMaquinaTotal);
+  const cUni=r4(cTir/qtd);
+  const vEmp=r2(cTir*pctEmp/100);const vVend=r2(cTir*pctVend/100);
+  const pTot=r2(cTir+vEmp+vVend+frete);const pUni=r4(pTot/qtd);
 
   ultimoResultado={largura,altura,gap,qtd,matNome,canais,modo:modo.label+' ('+modo.res+')',modoKey,velModo,areaP,tempoProducao,custoMaquinaTotal,etiquetasM2,areaUtil,cTin,cTir,vEmp,vVend,frete,pTot,pUni,pctEmp,pctVend,vendNome};
 
-  salvarNoHistorico({id:Date.now(),data:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),dataBr:new Date().toLocaleDateString('pt-BR'),vendedor:vendNome||'—',largura,altura,gap,quantidade:qtd,material:matNome,modo:modo.label,modoKey,canais,areaPerda:areaP,tempoProducao:tempoProducao,custoMaquina:custoMaquinaTotal,precoTotal:pTot,precoUnit:pUni,pctVendedor:pctVend,pctEmpresa:pctEmp,frete,custoTiragem:cTir,valEmpresa:vEmp,valVendedor:vVend});
+  salvarNoHistorico({id:novoId(),data:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),dataBr:new Date().toLocaleDateString('pt-BR'),vendedor:vendNome||'—',largura,altura,gap,quantidade:qtd,material:matNome,modo:modo.label,modoKey,canais,areaPerda:areaP,tempoProducao:tempoProducao,custoMaquina:custoMaquinaTotal,precoTotal:pTot,precoUnit:pUni,pctVendedor:pctVend,pctEmpresa:pctEmp,frete,custoTiragem:cTir,valEmpresa:vEmp,valVendedor:vVend});
 
   function ri(l,v){return'<div class="r-item"><span>'+l+'</span><b>'+v+'</b></div>';}
-  let h='<div class="hero"><div class="t">💰 Preço de Venda Total</div><div class="v">'+brl(pTot)+'</div><div class="u">'+brl(pUni,4)+'/unid · '+Math.round(qtd).toLocaleString('pt-BR')+' un'+(vendNome?' · '+vendNome:'')+'</div></div>';
+  let h='<div class="hero"><div class="t">💰 Preço de Venda Total</div><div class="v">'+brl(pTot)+'</div><div class="u">'+brl(pUni,4)+'/unid · '+Math.round(qtd).toLocaleString('pt-BR')+' un'+(vendNome?' · '+esc(vendNome):'')+'</div></div>';
 
   h+='<div class="r-sec">Áreas</div>'+ri('Bruta',(lB*1000).toFixed(0)+'×'+(aB*1000).toFixed(0)+' mm')+ri('Área Unidade',areaU.toFixed(4)+' m²')+ri('Rendimento (área útil '+areaUtil.toFixed(1)+' m²)',etiquetasM2+' etiquetas/m²')+ri('Área Líquida',areaL.toFixed(3)+' m²')+ri('Área c/ Perda ('+cfg.perda+'%)',areaP.toFixed(3)+' m²');
 
@@ -612,7 +724,7 @@ function calcular(){
   h+=ri('Canais ativos',canais.join(', '));
 
   h+='<div class="r-sec">Custos Variáveis /m²</div>';
-  h+=ri('Material ('+matNome+')',brl(cMat,3));
+  h+=ri('Material ('+esc(matNome)+')',brl(cMat,3));
   h+=ri('· Tinta CMYK ('+coresCMYK.length+'/4)',brl(custoCMYK,3));
   if(custoWhite>0)h+=ri('· Tinta White ('+whiteCov+'%)',brl(custoWhite,3));
   h+=ri('· Purga ('+cfg.purga+'%)','+ '+brl(valPurga,3));
@@ -629,6 +741,11 @@ function calcular(){
   h+='<div class="r-total"><span>CUSTO TIRAGEM</span><span>'+brl(cTir)+'</span></div>';
   h+=ri('Custo / Rótulo',brl(cUni,4));
 
+  h+='<div class="r-sec">⚖️ Comparar Materiais <span style="color:var(--s500);font-weight:600;text-transform:none;letter-spacing:0;">(mesma tiragem)</span></div>';
+  {
+    const comps=d.materiais.map(mm=>{const cm=mm.valor*(1+mm.icms/100);const tir=r2((cm+cTin)*areaP+custoMaquinaTotal);const tot=r2(tir+tir*pctEmp/100+tir*pctVend/100+frete);return{nome:mm.nome,tot};}).sort((a,b)=>a.tot-b.tot);
+    comps.forEach(c=>{h+='<div class="r-item'+(c.nome===matNome?' sel-mat':'')+'"><span>'+esc(c.nome)+'</span><b>'+brl(c.tot)+'</b></div>';});
+  }
   h+='<div class="r-sec">Comercial</div>';
   h+='<div class="r-total comm"><span>Empresa ('+pctEmp+'%)</span><b>+ '+brl(vEmp)+'</b></div>';
   h+='<div class="r-total comm"><span>Vendedor ('+pctVend+'%)</span><b>+ '+brl(vVend)+'</b></div>';
@@ -649,7 +766,7 @@ function gerarPDF(){
   const d=loadDB();
   doc.setFillColor(15,15,15);doc.rect(0,0,W,38,'F');
   doc.setFillColor(249,115,22);doc.rect(0,36,W,3,'F');
-  if(d.logo){try{doc.addImage(d.logo,'AUTO',M,6,0,26);}catch(e){}}
+  if(d.logo){try{doc.addImage(d.logo,/^data:image\/png/i.test(d.logo)?'PNG':'JPEG',M,6,0,26);}catch(e){}}
   const tx=d.logo?M+35:M;
   doc.setTextColor(255,255,255);doc.setFontSize(18);doc.setFont('helvetica','bold');doc.text('COTAÇÃO DE RÓTULOS',tx,18);
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(148,163,184);
@@ -682,6 +799,10 @@ function compartilhar(){
 window.addEventListener('DOMContentLoaded',()=>{
   initCloud();
   renderAll();
+  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){navigator.serviceWorker.register('./sw.js').catch(()=>{});}
+  let lastActivity=Date.now();
+  ['pointerdown','keydown','touchstart'].forEach(ev=>{document.addEventListener(ev,()=>{lastActivity=Date.now();},{passive:true});});
+  setInterval(()=>{if(adminUnlocked&&Date.now()-lastActivity>600000)bloquearAdmin();},60000);
   ['largura','altura','gap'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.addEventListener('input',calcularRendimento);
@@ -689,4 +810,9 @@ window.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 </body>
+</html>
+pt>
+</body>
+</html>
+
 </html>
