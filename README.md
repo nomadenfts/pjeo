@@ -1,11 +1,12 @@
-# pjeo — Calculadora Mobile
+# pjeo — Calculadora de Rótulos V3
 
-Calculadora mobile recriada em **HTML, CSS e JavaScript puros** (arquivo único, sem dependências externas).
+App mobile de **cotação digital para impressão de rótulos** — arquivo único em HTML/CSS/JS, sem build.
+Autor do código original: **Daniel Souza** (v16.0).
 
 ## Como usar
 
-- **Celular/preview:** abra `calculadora-mobile.html` (ou `index.html`, que redireciona para ela).
-- **Local:** basta abrir o arquivo no navegador, ou servir a pasta:
+- **Preview:** o servidor da porta 8000 abre `index.html`, que redireciona para `calculadora-mobile.html`.
+- **Local:** abra o arquivo direto no navegador, ou sirva a pasta:
   ```bash
   python3 -m http.server 8000
   # → http://localhost:8000
@@ -13,18 +14,19 @@ Calculadora mobile recriada em **HTML, CSS e JavaScript puros** (arquivo único,
 
 ## Funcionalidades
 
-- ➕ Operações: soma, subtração, multiplicação, divisão (com precedência correta)
-- % Percentual inteligente: `200 + 10% = 220` (estilo calculadoras de celular)
-- 🔢 Números até 12 dígitos, formatação pt-BR (`1.234,56`)
-- 🔍 Prévia do resultado em tempo real enquanto você digita
-- ↩️ `=` repete a última operação (ex.: `8 × 4 =` → `32`, `=` → `128`)
-- ⌫ Backspace para corrigir dígito a dígito
-- 🕘 Histórico dos últimos 40 cálculos (persistido em `localStorage`; toque num item para reutilizar o resultado)
-- ⌨️ Suporte a teclado físico: `0–9`, `+ − * /`, `Enter` (=), `Backspace`, `Esc` (AC), `%`, `F9` (±)
-- 📱 Layout mobile-first com moldura de telefone no desktop, barra de status com relógio, safe areas para iPhone (notch)
-- ♿ Acessível: `aria-label`s, foco visível, `aria-live` no visor
-- 🐛 Tratamento de erros: divisão por zero exibe mensagem amigável
-- Vibração sutil ao tocar (em aparelhos que suportam)
+- 🧮 **Cotação**: dimensões (largura × altura × gap), quantidade, material e modo de impressão
+  (Rascunho 300×600, Produção 600×600, Alta 600×900, Máxima 1200×1200)
+- 📐 **Rendimento por m²**: etiquetas por m² (com área útil configurável) + conversor m² ⇄ etiquetas
+- 🎨 **Cores CMYK + branco** com cobertura (20–100%) e purga/limpeza
+- 💼 **Comercial**: comissão de vendedor e empresa, frete, preço total e por unidade
+- 📊 **Resumo em bottom-sheet** com composição completa de custos (material + ICMS, tinta, máquina por tempo)
+- 📄 **PDF** profissional (jsPDF) com logo da empresa, 📤 **compartilhar** (Web Share/clipboard)
+- 📜 **Histórico** com filtros por vendedor e data, reabrir cotação, **exportar CSV**
+- 👥 **Vendedores** com comissão personalizada
+- ⚙️ **Admin protegido por PIN** (padrão `1234`): materiais (R$/m² + ICMS), custos/velocidade por modo,
+  hora-máquina, margem de perda, logo, backup JSON exportar/importar, restaurar padrões
+- ☁️ **Sync Firebase opcional** — preencha `FIREBASE_CONFIG` no código (ou siga no modo 📴 LOCAL,
+  que persiste tudo em `localStorage`)
 
 ## Estrutura
 
@@ -34,3 +36,6 @@ pjeo/
 ├── calculadora-mobile.html  # o app completo (HTML + CSS + JS)
 └── README.md
 ```
+
+> Dependências via CDN: Firebase 10.12.2 (compat) e jsPDF 2.5.1. Sem internet, o app
+> funciona em modo local — apenas PDF e sync na nuvem ficam indisponíveis.
