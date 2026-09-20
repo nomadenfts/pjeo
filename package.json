@@ -1,0 +1,13 @@
+{
+  "name": "pjeo-rotulos",
+  "version": "17.0.0",
+  "description": "Calculadora de Rótulos V3 — cotação digital para impressão de rótulos",
+  "private": true,
+  "scripts": {
+    "test": "node tests/app.test.cjs && node tests/dom.test.cjs",
+    "serve": "python3 -m http.server 8000"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}

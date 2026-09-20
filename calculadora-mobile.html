@@ -8,8 +8,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="author" content="Daniel Souza">
 <title>Calculadora de Rótulos V3</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{--orange:#F97316;--orange-dark:#EA580C;--orange-soft:#FFF7ED;--black:#0F0F0F;--s900:#0F172A;--s800:#1E293B;--s700:#334155;--s500:#64748B;--s400:#94A3B8;--s300:#CBD5E1;--s200:#E2E8F0;--s100:#F1F5F9;--red:#EF4444;--green:#10B981;}
@@ -151,7 +152,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <div class="page active" id="page-user">
   <div class="card"><div class="card-title">👤 Vendedor</div>
-    <div class="field"><label>Selecione o Vendedor</label><select id="vendedor-select" onchange="aplicarComissaoVendedor()"><option value="">— Sem vendedor (comissão padrão) —</option></select></div>
+    <div class="field"><label for="vendedor-select">Selecione o Vendedor</label><select id="vendedor-select" onchange="aplicarComissaoVendedor()"><option value="">— Sem vendedor (comissão padrão) —</option></select></div>
   </div>
   <div class="card"><div class="card-title">📐 Dimensões do Rótulo</div>
     <div class="grid-3">
@@ -168,6 +169,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
     <div class="rend-linha"><span>Área por etiqueta (c/ gap)</span><b id="rend-area-unit">—</b></div>
     <div class="rend-linha"><span>Área útil de impressão</span><b id="rend-area-util">0,9 m²</b></div>
+    <div id="label-preview" aria-hidden="true"></div>
     <div class="hint" style="margin-top:10px;">Conversor rápido — preencha um lado e veja o resultado no outro.</div>
     <div class="grid-2">
       <div class="field"><label for="conv-m2">Tenho (m²)</label><input type="text" inputmode="decimal" id="conv-m2" oninput="converterM2paraEtiquetas()" placeholder="Ex: 10"></div>
@@ -184,7 +186,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
   </div>
 
-  <v class="card-title">🖨️ Modo de Impressão</div>
+  <div class="card"><div class="card-title">🖨️ Modo de Impressão</div>
     <div class="hint">Escolha a qualidade. Custos e velocidade são aplicados automaticamente na fórmula.</div>
     <div class="chips-wrap">
       <label class="modo-chip"><input type="radio" name="modo" value="Rascunho"><span class="mbox"><span class="mico">⚡</span>Rascunho<span class="msub">300×600</span></span></label>
@@ -216,20 +218,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
   <div class="card"><div class="card-title">💼 Comercial</div>
     <div class="grid-3">
-      <div class="field"><label>Vendedor %</label><input type="text" inputmode="decimal" id="vendedor" value="5"></div>
-      <div class="field"><label>Empresa %</label><input type="text" inputmode="decimal" id="empresa" value="15"></div>
-      <div class="field"><label>Frete (R$)</label><input type="text" inputmode="decimal" id="frete" value="0"></div>
+      <div class="field"><label for="vendedor">Vendedor %</label><input type="text" inputmode="decimal" id="vendedor" value="5"></div>
+      <div class="field"><label for="empresa">Empresa %</label><input type="text" inputmode="decimal" id="empresa" value="15"></div>
+      <div class="field"><label for="frete">Frete (R$)</label><input type="text" inputmode="decimal" id="frete" value="0"></div>
     </div>
   </div>
-  <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v16.0</span></div></div>
+  <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v17.0</span></div></div>
 </div>
 
 <div class="page" id="page-hist">
   <div class="card"><div class="card-title">🔍 Filtros</div>
     <div class="filter-bar">
-      <select id="hist-filtro-vend" onchange="renderHistorico()"><option value="">Todos os vendedores</option></select>
-      <input type="date" id="hist-data-ini" onchange="renderHistorico()">
-      <input type="date" id="hist-data-fim" onchange="renderHistorico()">
+      <select id="hist-filtro-vend" aria-label="Filtrar por vendedor" onchange="renderHistorico()"><option value="">Todos os vendedores</option></select>
+      <input type="date" id="hist-data-ini" aria-label="Data inicial" onchange="renderHistorico()">
+      <input type="date" id="hist-data-fim" aria-label="Data final" onchange="renderHistorico()">
+      <input type="search" id="hist-busca" placeholder="🔍 Buscar material, vendedor, tamanho..." oninput="renderHistorico()" aria-label="Buscar no histórico">
     </div>
     <div class="btn-row" style="margin-top:0;">
       <button class="btn btn-green" onclick="exportarCSV()">📥 EXPORTAR CSV</button>
@@ -238,7 +241,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
   <div id="hist-resumo"></div>
   <div class="card"><div class="card-title">📜 Cotações Realizadas</div><div id="lista-historico"></div></div>
-  <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v16.0</span></div></div>
+  <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v17.0</span></div></div>
 </div>
 
 <div class="page" id="page-vend">
@@ -250,7 +253,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <button class="btn btn-dark" onclick="salvarVendedor()" style="margin-top:12px;">💾 SALVAR VENDEDOR</button>
     <div id="lista-vendedores" style="margin-top:14px;"></div>
   </div>
-  <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v16.0</span></div></div>
+  <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v17.0</span></div></div>
 </div>
 
 <div class="page" id="page-admin">
@@ -316,7 +319,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="btn-row"><button class="btn btn-red" onclick="restaurarPadroes()">🔄 RESTAURAR PADRÕES</button></div>
     <div class="storage-note" id="storage-note"></div>
   </div>
-  <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v16.0</span></div></div>
+  <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v17.0</span></div></div>
 </div>
 
 </main>
@@ -528,15 +531,15 @@ async function validarPin(){
   }
 }
 function cancelarPin(){document.getElementById('pin-overlay').classList.remove('open');document.getElementById('pin-input').value='';}
-function bloquearAdmin(){adminUnlocked=false;const pg=document.getElementById('page-admin');if(pg&&pg.classList.contains('active'))goPage('user');toast('🔒 Admin bloqueado');}
 async function trocarPin(){const v=document.getElementById('novo-pin').value;if(!/^\d{4,8}$/.test(v)){toast('⚠️ 4-8 dígitos',true);return;}const d=loadDB();d.pin=pinHasHash()?'sha256:'+await sha256Hex(v):v;saveDB(d);toast('🔐 PIN alterado!');document.getElementById('novo-pin').value='';}
+function bloquearAdmin(){adminUnlocked=false;const pg=document.getElementById('page-admin');if(pg&&pg.classList.contains('active'))goPage('user');toast('🔒 Admin bloqueado');}
 
-function renderMateriais(){const d=loadDB();const s=document.getElementById('material');const l=document.getElementById('lista-materiais');const a=s.value;s.innerHTML='';l.innerHTML='';d.materiais.forEach((m,i)=>{const o=document.createElement('option');o.value=m.nome;o.textContent=m.nome;s.appendChild(o);const c=(m.valor*(1+m.icms/100)).toFixed(2);const div=document.createElement('div');div.className='mat-item';div.innerHTML='<div><div class="mat-name">'+esc(m.nome)+'</div><div class="mat-sub">R$ '+m.valor.toFixed(2)+' + '+m.icms+'% → <b>R$ '+c+'/m²</b></div></div><div><button class="btn-mini edit" aria-label="Editar '+esc(m.nome)+'" onclick="editarMaterial('+i+')">✏️</button> <button class="btn-mini del" aria-label="Excluir '+esc(m.nome)+'" onclick="excluirMaterial('+i+')">🗑️</button></div>';l.appendChild(div);});if(a&&d.materiais.some(m=>m.nome===a))s.value=a;}
+function renderMateriais(){const d=loadDB();const s=document.getElementById('material');const l=document.getElementById('lista-materiais');const a=s.value;s.innerHTML='';l.innerHTML='';d.materiais.forEach((m,i)=>{const o=document.createElement('option');o.value=m.nome;o.textContent=m.nome;s.appendChild(o);const c=(m.valor*(1+m.icms/100)).toFixed(2);const div=document.createElement('div');div.className='mat-item';div.innerHTML='<div><div class="mat-name">'+esc(m.nome)+'</div><div class="mat-sub">R$ '+m.valor.toFixed(2)+' + '+m.icms+'% → <b>R$ '+c+'/m²</b></div></div><div><button class="btn-mini edit" onclick="editarMaterial('+i+')">✏️</button> <button class="btn-mini del" onclick="excluirMaterial('+i+')">🗑️</button></div>';l.appendChild(div);});if(a&&d.materiais.some(m=>m.nome===a))s.value=a;}
 function salvarMaterial(){const n=document.getElementById('adm-nome').value.toUpperCase().trim();const v=parseNum(document.getElementById('adm-valor').value);const ic=parseNum(document.getElementById('adm-icms').value);if(!n||isNaN(v)||isNaN(ic)){toast('⚠️ Preencha tudo',true);return;}const d=loadDB();if(editingMaterial!==null&&editingMaterial!==n)d.materiais=d.materiais.filter(m=>m.nome!==editingMaterial);const idx=d.materiais.findIndex(m=>m.nome===n);if(idx>=0)d.materiais[idx]={nome:n,valor:v,icms:ic};else d.materiais.push({nome:n,valor:v,icms:ic});saveDB(d);toast('✅ Salvo!');editingMaterial=null;document.getElementById('adm-nome').value='';document.getElementById('adm-valor').value='';document.getElementById('adm-icms').value='';renderMateriais();}
 function editarMaterial(i){const m=loadDB().materiais[i];if(!m)return;editingMaterial=m.nome;document.getElementById('adm-nome').value=m.nome;document.getElementById('adm-valor').value=m.valor;document.getElementById('adm-icms').value=m.icms;toast('📝 Editando "'+m.nome+'"');window.scrollTo({top:0,behavior:'smooth'});}
 async function excluirMaterial(i){const d=loadDB();const m=d.materiais[i];if(!m||!(await askConfirm('Excluir "'+m.nome+'"?')))return;d.materiais.splice(i,1);saveDB(d);toast('🗑️ Excluído');renderMateriais();}
 
-function renderVendedores(){const d=loadDB();const l=document.getElementById('lista-vendedores');const s=document.getElementById('vendedor-select');l.innerHTML='';const a=s.value;s.innerHTML='<option value="">— Sem vendedor (padrão) —</option>';d.vendedores.forEach((v,i)=>{const o=document.createElement('option');o.value=v.nome;o.textContent=v.nome+' ('+v.comissao+'%)';s.appendChild(o);const div=document.createElement('div');div.className='vend-item';div.innerHTML='<div><div class="vend-name">'+esc(v.nome)+'</div><div class="vend-sub">Comissão: <b>'+v.comissao+'%</b></div></div><div><button class="btn-mini edit" aria-label="Editar '+esc(v.nome)+'" onclick="editarVendedor('+i+')">✏️</button> <button class="btn-mini del" aria-label="Excluir '+esc(v.nome)+'" onclick="excluirVendedor('+i+')">🗑️</button></div>';l.appendChild(div);});if(a&&d.vendedores.some(x=>x.nome===a))s.value=a;}
+function renderVendedores(){const d=loadDB();const l=document.getElementById('lista-vendedores');const s=document.getElementById('vendedor-select');l.innerHTML='';const a=s.value;s.innerHTML='<option value="">— Sem vendedor (padrão) —</option>';d.vendedores.forEach((v,i)=>{const o=document.createElement('option');o.value=v.nome;o.textContent=v.nome+' ('+v.comissao+'%)';s.appendChild(o);const div=document.createElement('div');div.className='vend-item';div.innerHTML='<div><div class="vend-name">'+esc(v.nome)+'</div><div class="vend-sub">Comissão: <b>'+v.comissao+'%</b></div></div><div><button class="btn-mini edit" onclick="editarVendedor('+i+')">✏️</button> <button class="btn-mini del" onclick="excluirVendedor('+i+')">🗑️</button></div>';l.appendChild(div);});if(a&&d.vendedores.some(x=>x.nome===a))s.value=a;}
 function salvarVendedor(){const n=document.getElementById('vend-nome').value.trim();const c=parseNum(document.getElementById('vend-comissao').value);if(!n||isNaN(c)||c<0||c>100){toast('⚠️ Nome e comissão válidos',true);return;}const d=loadDB();if(editingVendedor!==null&&editingVendedor!==n)d.vendedores=d.vendedores.filter(v=>v.nome!==editingVendedor);const idx=d.vendedores.findIndex(v=>v.nome===n);if(idx>=0)d.vendedores[idx]={nome:n,comissao:c};else d.vendedores.push({nome:n,comissao:c});saveDB(d);toast('✅ Vendedor salvo!');editingVendedor=null;document.getElementById('vend-nome').value='';document.getElementById('vend-comissao').value='';renderVendedores();}
 function editarVendedor(i){const v=loadDB().vendedores[i];if(!v)return;editingVendedor=v.nome;document.getElementById('vend-nome').value=v.nome;document.getElementById('vend-comissao').value=v.comissao;toast('📝 Editando "'+v.nome+'"');}
 async function excluirVendedor(i){const d=loadDB();const v=d.vendedores[i];if(!v||!(await askConfirm('Excluir "'+v.nome+'"?')))return;d.vendedores.splice(i,1);saveDB(d);toast('🗑️ Excluído');renderVendedores();}
@@ -810,9 +813,4 @@ window.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 </body>
-</html>
-pt>
-</body>
-</html>
-
 </html>

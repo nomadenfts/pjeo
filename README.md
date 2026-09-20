@@ -61,7 +61,9 @@ pjeo/
 ├── manifest.json            # PWA
 ├── sw.js                    # service worker (offline)
 ├── icon.svg / icon-192.png / icon-512.png
-└── tests/app.test.cjs       # 52 testes de regressão (node tests/app.test.cjs)
+└── tests/                   # testes (npm test)
+    ├── app.test.cjs         # 52 testes de regressão de lógica
+    └── dom.test.cjs         # 12 testes de navegação com DOM real (jsdom)
 ```
 
 > Dependência via CDN: jsPDF 2.5.1 (cacheada pelo service worker após o primeiro uso).
