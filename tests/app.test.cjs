@@ -214,6 +214,7 @@ const pv = els['label-preview'].innerHTML;
 assert.ok(pv.includes('<svg')); ok('preview SVG gerado');
 assert.ok(pv.includes('130 × 30 mm')); ok('dimensões no preview');
 assert.ok(pv.includes('gap 3')); ok('gap no preview');
+assert.ok(pv.includes('183 repetições em 0,90 m² úteis')); ok('repetições na área útil (183)');
 els['largura'].value = '0';
 calcularRendimento();
 assert.strictEqual(els['label-preview'].innerHTML, ''); ok('dimensão inválida → sem preview');

@@ -478,15 +478,20 @@ function desenharPreview(){
   const a=parseNum(document.getElementById('altura').value)||0;
   const g=parseNum(document.getElementById('gap').value)||0;
   if(l<=0||a<=0||l>3000||a>3000){host.innerHTML='';return;}
+  const areaUtil=obterAreaUtil();
+  const areaU=((l+2*g)/1000)*((a+2*g)/1000);
+  const nRep=areaU>0?Math.floor(areaUtil/areaU):0;
   const W=l+2*g,H=a+2*g;
   const pad=Math.max(W,H)*0.08+4,txtH=15;
-  const vw=W+pad*2,vh=H+pad*2+txtH;
+  const vw=W+pad*2,vh=H+pad*2+txtH*2;
   const sw=Math.max(W,H)*0.012+0.4,da=Math.max(W,H)*0.03,db=Math.max(W,H)*0.02;
   const f=v=>String(Math.round(v*100)/100).replace('.',',');
-  host.innerHTML='<svg viewBox="0 0 '+vw+' '+vh+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Prévia da etiqueta com gap">'
+  const auTxt=areaUtil.toFixed(2).replace('.',',');
+  host.innerHTML='<svg viewBox="0 0 '+vw+' '+vh+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Prévia da etiqueta: '+f(l)+' por '+f(a)+' mm, cabem '+nRep+' repetições em '+auTxt+' m² úteis">'
     +'<rect x="'+pad+'" y="'+pad+'" width="'+W+'" height="'+H+'" rx="2" fill="#FFF7ED" stroke="#F97316" stroke-width="'+sw+'" stroke-dasharray="'+da+','+db+'"/>'
     +'<rect x="'+(pad+g)+'" y="'+(pad+g)+'" width="'+l+'" height="'+a+'" rx="1" fill="#F97316"/>'
-    +'<text x="'+(vw/2)+'" y="'+(vh-2)+'" text-anchor="middle" font-size="'+(txtH*0.74)+'" font-weight="700" fill="#64748B">'+f(l)+' × '+f(a)+' mm'+(g>0?' · gap '+f(g):'')+'</text>'
+    +'<text x="'+(vw/2)+'" y="'+(vh-txtH-4)+'" text-anchor="middle" font-size="'+(txtH*0.74)+'" font-weight="700" fill="#64748B">'+f(l)+' × '+f(a)+' mm'+(g>0?' · gap '+f(g):'')+'</text>'
+    +'<text x="'+(vw/2)+'" y="'+(vh-3)+'" text-anchor="middle" font-size="'+(txtH*0.8)+'" font-weight="800" fill="#EA580C">'+nRep.toLocaleString('pt-BR')+' repetições em '+auTxt+' m² úteis</text>'
     +'</svg>';
 }
 
