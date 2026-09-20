@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0F0F0F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="author" content="Daniel Souza">
+<title>Calculadora de Rótulos V3</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--orange:#F97316;--orange-dark:#EA580C;--orange-soft:#FFF7ED;--black:#0F0F0F;--s900:#0F172A;--s800:#1E293B;--s700:#334155;--s500:#64748B;--s400:#94A3B8;--s300:#CBD5E1;--s200:#E2E8F0;--s100:#F1F5F9;--red:#EF4444;--green:#10B981;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--s100);color:var(--s700);font-size:15px;}
+.watermark{position:fixed;right:-14px;bottom:96px;z-index:0;font-size:120px;font-weight:900;font-style:italic;letter-spacing:-8px;color:rgba(15,23,42,.05);pointer-events:none;user-select:none;line-height:1;}
+.app-header{position:sticky;top:0;z-index:50;background:var(--black);border-bottom:3px solid var(--orange);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+.app-header h1{color:#fff;font-size:16px;font-weight:800;}.app-header .accent{color:var(--orange);}
+.app-header .sub{color:var(--s500);font-size:9px;text-transform:uppercase;letter-spacing:2px;margin-top:1px;}
+.header-right{display:flex;align-items:center;gap:9px;}
+.sync-badge{font-size:9.5px;font-weight:800;padding:5px 9px;border-radius:20px;background:var(--s800);color:var(--s400);border:1px solid var(--s700);}
+.sync-badge.cloud{background:#052E16;color:#4ADE80;border-color:#14532D;}
+.sync-badge.pulse{animation:pulseSync .9s ease;}
+@keyframes pulseSync{0%{transform:scale(1)}40%{transform:scale(1.18);box-shadow:0 0 0 6px rgba(74,222,128,.15)}100%{transform:scale(1)}}
+.ds-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#fff;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ds-avatar.sm{width:30px;height:30px;font-size:11px;}
+.dev-credit{display:flex;align-items:center;justify-content:center;gap:10px;padding:20px 0 6px;}
+.dev-credit b{color:var(--s700);font-size:12px;display:block;}.dev-credit span{color:var(--s400);font-size:10px;text-transform:uppercase;letter-spacing:.8px;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--black);display:flex;border-top:1px solid var(--s800);padding-bottom:env(safe-area-inset-bottom);}
+.nav-item{flex:1;padding:10px 0 8px;text-align:center;color:var(--s500);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border:none;background:none;cursor:pointer;}
+.nav-item .icon{display:block;font-size:20px;margin-bottom:2px;}.nav-item.active{color:var(--orange);}
+.main{position:relative;z-index:2;padding:14px 14px 150px;max-width:640px;margin:0 auto;}
+.page{display:none;}.page.active{display:block;}
+.card{background:#fff;border:1px solid var(--s200);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(15,23,42,.05);}
+.card-title{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--s900);border-left:4px solid var(--orange);padding-left:10px;margin-bottom:14px;}
+.hint{font-size:11px;color:var(--s400);margin:-8px 0 12px;line-height:1.5;}
+.field{margin-bottom:12px;}.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--s500);margin-bottom:6px;letter-spacing:.4px;}
+.field input,.field select{width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--s300);border-radius:11px;background:#fff;color:var(--s900);font-weight:600;}
+.field input:focus,.field select:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(249,115,22,.15);}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.rend-destaque{display:flex;justify-content:space-between;align-items:center;background:var(--orange-soft);border:1.5px solid var(--orange);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+.rend-destaque .lbl{font-size:12px;font-weight:700;color:var(--s700);text-transform:uppercase;letter-spacing:.4px;}
+.rend-destaque .val{font-size:26px;font-weight:900;color:var(--orange-dark);}
+.rend-linha{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:var(--s500);}
+.rend-linha b{color:var(--s900);}
+.conv-result{padding:13px 14px;font-weight:800;color:var(--green);background:var(--s100);border-radius:11px;min-height:48px;display:flex;align-items:center;font-size:15px;}
+.chips-wrap{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:12px;}
+.chip{position:relative;}.chip input{position:absolute;opacity:0;width:0;height:0;}
+.chip .box{display:flex;align-items:center;gap:8px;padding:12px 14px;border:2px solid var(--s200);border-radius:12px;font-weight:700;font-size:13px;color:var(--s400);background:#fff;cursor:pointer;user-select:none;transition:.15s;}
+.chip .dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+.dot-y{background:#EAB308;}.dot-m{background:#EC4899;}.dot-c{background:#06B6D4;}.dot-k{background:#0F0F0F;border:1px solid var(--s500);}.dot-w{background:#fff;border:2px solid var(--s300);}
+.chip input:checked+.box{border-color:var(--orange);color:var(--s900);background:var(--orange-soft);}
+.chip .box .chk{display:none;color:var(--orange);font-weight:900;}.chip input:checked+.box .chk{display:inline;}
+.modo-chip{position:relative;}.modo-chip input{position:absolute;opacity:0;width:0;height:0;}
+.modo-chip .mbox{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 14px;border:2px solid var(--s200);border-radius:12px;font-weight:700;font-size:12px;color:var(--s400);background:#fff;cursor:pointer;user-select:none;transition:.15s;min-width:80px;text-align:center;}
+.modo-chip .mbox .mico{font-size:18px;}
+.modo-chip .mbox .msub{font-size:9px;color:var(--s400);font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
+.modo-chip input:checked+.mbox{border-color:var(--orange);color:var(--s900);background:var(--orange-soft);}
+.modo-chip input:checked+.mbox .msub{color:var(--orange-dark);}
+.white-cov-wrap{overflow:hidden;max-height:0;transition:max-height .3s ease,opacity .3s;opacity:0;margin-top:-6px;margin-bottom:6px;}
+.white-cov-wrap.show{max-height:70px;opacity:1;margin-top:0;}
+.calc-wrap{position:fixed;left:14px;right:14px;bottom:calc(66px + env(safe-area-inset-bottom));z-index:45;max-width:612px;margin:0 auto;}
+.btn-calc{width:100%;background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#fff;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:900;letter-spacing:.6px;cursor:pointer;box-shadow:0 8px 24px rgba(249,115,22,.4);text-transform:uppercase;}
+.btn-calc:active{transform:scale(.98);}
+.btn{border:none;border-radius:11px;padding:14px;cursor:pointer;font-weight:800;font-size:14px;width:100%;}
+.btn-dark{background:var(--black);color:var(--orange);}.btn-orange{background:var(--orange);color:#fff;}
+.btn-slate{background:var(--s700);color:#fff;}.btn-red{background:var(--red);color:#fff;}.btn-green{background:var(--green);color:#fff;}
+.btn:active{opacity:.85;}
+.btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.btn-row .btn{flex:1;min-width:110px;font-size:12px;padding:12px 8px;}
+.btn-mini{border:none;border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer;}
+.btn-mini.edit{background:var(--orange-soft);color:var(--orange-dark);}.btn-mini.del{background:#FEE2E2;color:var(--red);}
+.mat-item,.vend-item{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;border-bottom:1px solid var(--s200);}
+.mat-item:last-child,.vend-item:last-child{border-bottom:none;}
+.mat-name,.vend-name{font-weight:800;color:var(--s900);font-size:13.5px;}
+.mat-sub,.vend-sub{font-size:11.5px;color:var(--s500);margin-top:2px;}.mat-sub b,.vend-sub b{color:var(--orange-dark);}
+.vend-sub b{color:var(--green);}
+.hist-item{background:#fff;border:1px solid var(--s200);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.hist-info{flex:1;}.hist-top{display:flex;justify-content:space-between;margin-bottom:4px;}
+.hist-data{font-size:11px;color:var(--s400);font-weight:700;}.hist-vend{font-size:11px;color:var(--orange);font-weight:800;}
+.hist-spec{font-size:12px;color:var(--s700);font-weight:600;margin-bottom:2px;}
+.hist-price{font-size:16px;font-weight:900;color:var(--green);}
+.hist-actions{display:flex;gap:6px;margin-left:10px;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--s400);}
+.empty-state .icon{font-size:48px;margin-bottom:10px;opacity:.5;}.empty-state p{font-size:13px;}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.filter-bar select,.filter-bar input{flex:1;min-width:120px;padding:10px;font-size:13px;border:1.5px solid var(--s300);border-radius:10px;background:#fff;}
+.logo-preview{width:100%;max-height:80px;object-fit:contain;border-radius:8px;border:1px dashed var(--s300);margin-top:8px;display:none;}
+.sheet-overlay{position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:100;opacity:0;pointer-events:none;transition:.25s;}
+.sheet-overlay.open{opacity:1;pointer-events:auto;}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:20px;background:var(--s900);border-radius:22px 22px 0 0;transform:translateY(105%);transition:transform .32s cubic-bezier(.2,.85,.25,1);display:flex;flex-direction:column;max-width:640px;margin:0 auto;}
+.sheet-overlay.open .sheet{transform:translateY(0);}
+.sheet-handle{width:44px;height:5px;background:var(--s700);border-radius:3px;margin:10px auto 2px;flex-shrink:0;}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;padding:10px 20px 14px;border-bottom:1px solid var(--s800);flex-shrink:0;}
+.sheet-head h2{color:#fff;font-size:15px;font-weight:800;}.sheet-head h2 span{color:var(--orange);}
+.btn-close{background:var(--s800);color:var(--s300);border:none;width:36px;height:36px;border-radius:50%;font-size:15px;font-weight:800;cursor:pointer;}
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px calc(30px + env(safe-area-inset-bottom));flex:1;}
+.sheet-ds{text-align:center;color:#334155;font-size:10px;margin-top:16px;letter-spacing:1px;text-transform:uppercase;}
+.hero{background:linear-gradient(135deg,var(--orange),var(--orange-dark));border-radius:16px;padding:18px 20px;margin-bottom:16px;color:#fff;}
+.hero .t{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;opacity:.85;}
+.hero .v{font-size:27px;font-weight:900;margin-top:4px;line-height:1.1;}
+.hero .u{font-size:12.5px;font-weight:700;margin-top:6px;opacity:.9;}
+.r-sec{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--orange);margin:16px 0 6px;padding-left:9px;border-left:3px solid var(--orange);}
+.r-item{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--s800);font-size:13px;color:var(--s400);}
+.r-item b{color:#fff;font-weight:700;white-space:nowrap;}
+.r-total{display:flex;justify-content:space-between;background:var(--s800);border-radius:11px;padding:13px 14px;margin-top:9px;font-weight:800;color:#fff;font-size:14px;}
+.r-total.comm{background:#172033;color:var(--s400);font-weight:600;font-size:12.5px;padding:11px 14px;}.r-total.comm b{color:var(--s300);}
+.btn-share{width:100%;margin-top:12px;background:#172033;border:1.5px solid var(--orange);color:var(--orange);border-radius:12px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;}
+.btn-pdf{width:100%;margin-top:8px;background:var(--orange);border:none;color:#fff;border-radius:12px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;}
+.btn-share:active,.btn-pdf:active{opacity:.85;}
+.pin-overlay{position:fixed;inset:0;background:rgba(15,23,42,.92);z-index:200;display:none;align-items:center;justify-content:center;padding:24px;}
+.pin-overlay.open{display:flex;}
+.pin-box{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:330px;text-align:center;}
+.pin-box .lock{font-size:38px;}.pin-box h3{color:var(--s900);font-size:17px;margin:10px 0 4px;}
+.pin-box p{color:var(--s500);font-size:12px;margin-bottom:16px;}
+.pin-box input{width:100%;padding:14px;font-size:24px;text-align:center;letter-spacing:10px;border:2px solid var(--s300);border-radius:12px;margin-bottom:12px;font-weight:800;color:var(--s900);}
+.pin-box input:focus{outline:none;border-color:var(--orange);}
+.pin-btns{display:flex;gap:8px;}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-16px);background:var(--s900);color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:700;z-index:400;opacity:0;transition:.3s;border-left:4px solid var(--orange);max-width:88%;box-shadow:0 8px 24px rgba(0,0,0,.35);pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}.toast.err{border-left-color:var(--red);}
+.hidden-file{display:none;}
+.storage-note{font-size:11px;color:var(--s400);text-align:center;padding:10px 4px 0;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="watermark">DS</div>
+<header class="app-header">
+  <div><h1>🏷️ Calculadora de Rótulos <span class="accent">V3</span></h1><div class="sub">Cotação Digital Inteligente</div></div>
+  <div class="header-right"><span class="sync-badge" id="sync-badge">📴 LOCAL</span><div class="ds-avatar" title="Daniel Souza">DS</div></div>
+</header>
+<main class="main">
+
+<div class="page active" id="page-user">
+  <div class="card"><div class="card-title">👤 Vendedor</div>
+    <div class="field"><label>Selecione o Vendedor</label><select id="vendedor-select" onchange="aplicarComissaoVendedor()"><option value="">— Sem vendedor (comissão padrão) —</option></select></div>
+  </div>
+  <div class="card"><div class="card-title">📐 Dimensões do Rótulo</div>
+    <div class="grid-3">
+      <div class="field"><label>Largura (mm)</label><input type="text" inputmode="decimal" id="largura" value="130"></div>
+      <div class="field"><label>Altura (mm)</label><input type="text" inputmode="decimal" id="altura" value="30"></div>
+      <div class="field"><label>Gap (mm)</label><input type="text" inputmode="decimal" id="gap" value="3"></div>
+    </div>
+  </div>
+
+  <div class="card"><div class="card-title">📏 Rendimento por m²</div>
+    <div class="rend-destaque">
+      <span class="lbl">Etiquetas por m²</span>
+      <span class="val" id="rend-etiquetas-m2">—</span>
+    </div>
+    <div class="rend-linha"><span>Área por etiqueta (c/ gap)</span><b id="rend-area-unit">—</b></div>
+    <div class="rend-linha"><span>Área útil de impressão</span><b id="rend-area-util">0,9 m²</b></div>
+    <div class="hint" style="margin-top:10px;">Conversor rápido — preencha um lado e veja o resultado no outro.</div>
+    <div class="grid-2">
+      <div class="field"><label>Tenho (m²)</label><input type="text" inputmode="decimal" id="conv-m2" oninput="converterM2paraEtiquetas()" placeholder="Ex: 10"></div>
+      <div class="field"><label>Cabem (etiquetas)</label><div class="conv-result" id="conv-m2-result">—</div></div>
+      <div class="field"><label>Preciso (etiquetas)</label><input type="text" inputmode="decimal" id="conv-etiq" oninput="converterEtiquetasParaM2()" placeholder="Ex: 500"></div>
+      <div class="field"><label>Serão necessários (m²)</label><div class="conv-result" id="conv-etiq-result">—</div></div>
+    </div>
+  </div>
+
+  <div class="card"><div class="card-title">🏭 Produção</div>
+    <div class="grid-2">
+      <div class="field"><label>Quantidade</label><input type="text" inputmode="numeric" id="quantidade" value="340"></div>
+      <div class="field"><label>Material</label><select id="material"></select></div>
+    </div>
+  </div>
+
+  <div class="card"><div class="card-title">🖨️ Modo de Impressão</div>
+    <div class="hint">Escolha a qualidade. Custos e velocidade são aplicados automaticamente na fórmula.</div>
+    <div class="chips-wrap">
+      <label class="modo-chip"><input type="radio" name="modo" value="Rascunho"><span class="mbox"><span class="mico">⚡</span>Rascunho<span class="msub">300×600</span></span></label>
+      <label class="modo-chip"><input type="radio" name="modo" value="Padrao" checked><span class="mbox"><span class="mico">🏭</span>Produção<span class="msub">600×600</span></span></label>
+      <label class="modo-chip"><input type="radio" name="modo" value="Alta"><span class="mbox"><span class="mico">✨</span>Alta Qualidade<span class="msub">600×900</span></span></label>
+      <label class="modo-chip"><input type="radio" name="modo" value="Maxima"><span class="mbox"><span class="mico">💎</span>Máxima<span class="msub">1200×1200</span></span></label>
+    </div>
+  </div>
+
+  <div class="card"><div class="card-title">🎨 Cores</div>
+    <div class="hint">CMYK: cada canal ativo usa a base do modo. Branco é cobrado à parte, diluído pela cobertura.</div>
+    <div class="chips-wrap">
+      <label class="chip"><input type="checkbox" id="cor-yellow" checked><span class="box"><span class="dot dot-y"></span>Yellow<span class="chk">✓</span></span></label>
+      <label class="chip"><input type="checkbox" id="cor-magenta" checked><span class="box"><span class="dot dot-m"></span>Magenta<span class="chk">✓</span></span></label>
+      <label class="chip"><input type="checkbox" id="cor-cyan" checked><span class="box"><span class="dot dot-c"></span>Cyan<span class="chk">✓</span></span></label>
+      <label class="chip"><input type="checkbox" id="cor-black" checked><span class="box"><span class="dot dot-k"></span>Black<span class="chk">✓</span></span></label>
+      <label class="chip"><input type="checkbox" id="cor-white" onchange="toggleWhiteCov()"><span class="box"><span class="dot dot-w"></span>White<span class="chk">✓</span></span></label>
+    </div>
+    <div class="white-cov-wrap" id="white-cov-wrap">
+      <div class="field"><label>Cobertura do Branco</label>
+        <select id="cor-branco-cov">
+          <option value="20">20%</option><option value="40">40%</option>
+          <option value="60">60%</option><option value="80">80%</option>
+          <option value="100" selected>100% (chapado)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card"><div class="card-title">💼 Comercial</div>
+    <div class="grid-3">
+      <div class="field"><label>Vendedor %</label><input type="text" inputmode="decimal" id="vendedor" value="5"></div>
+      <div class="field"><label>Empresa %</label><input type="text" inputmode="decimal" id="empresa" value="15"></div>
+      <div class="field"><label>Frete (R$)</label><input type="text" inputmode="decimal" id="frete" value="0"></div>
+    </div>
+  </div>
+  <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v16.0</span></div></div>
+</div>
+
+<div class="page" id="page-hist">
+  <div class="card"><div class="card-title">🔍 Filtros</div>
+    <div class="filter-bar">
+      <select id="hist-filtro-vend" onchange="renderHistorico()"><option value="">Todos os vendedores</option></select>
+      <input type="date" id="hist-data-ini" onchange="renderHistorico()">
+      <input type="date" id="hist-data-fim" onchange="renderHistorico()">
+    </div>
+    <div class="btn-row" style="margin-top:0;">
+      <button class="btn btn-green" onclick="exportarCSV()">📥 EXPORTAR CSV</button>
+      <button class="btn btn-slate" onclick="limparFiltros()">🔄 LIMPAR</button>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">📜 Cotações Realizadas</div><div id="lista-historico"></div></div>
+  <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v16.0</span></div></div>
+</div>
+
+<div class="page" id="page-vend">
+  <div class="card"><div class="card-title">➕ Novo Vendedor</div>
+    <div class="grid-2">
+      <div class="field"><label>Nome</label><input type="text" id="vend-nome" placeholder="Ex: João Silva"></div>
+      <div class="field"><label>Comissão (%)</label><input type="text" inputmode="decimal" id="vend-comissao" placeholder="5"></div>
+    </div>
+    <button class="btn btn-dark" onclick="salvarVendedor()" style="margin-top:12px;">💾 SALVAR VENDEDOR</button>
+    <div id="lista-vendedores" style="margin-top:14px;"></div>
+  </div>
+  <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v16.0</span></div></div>
+</div>
+
+<div class="page" id="page-admin">
+  <div class="card"><div class="card-title">🧱 Matéria Prima</div>
+    <div class="field"><label>Nome do Material</label><input type="text" id="adm-nome" placeholder="Ex: BOPP BR. BRILHO" style="text-transform:uppercase;"></div>
+    <div class="grid-2">
+      <div class="field"><label>Valor Base (R$/m²)</label><input type="text" inputmode="decimal" id="adm-valor" placeholder="3.36"></div>
+      <div class="field"><label>ICMS (%)</label><input type="text" inputmode="decimal" id="adm-icms" placeholder="9.75"></div>
+    </div>
+    <button class="btn btn-dark" onclick="salvarMaterial()" style="margin-top:12px;">💾 SALVAR MATERIAL</button>
+    <div id="lista-materiais" style="margin-top:14px;"></div>
+  </div>
+
+  <div class="card"><div class="card-title">🎨 Custo & Velocidade por Modo</div>
+    <div class="hint">Tinta (R$/m²) e velocidade (m²/h) de cada modo. <b>Não aparecem na cotação</b> — usados só na fórmula.</div>
+    <div class="grid-2">
+      <div class="field"><label>⚡ Rascunho — Tinta R$/m²</label><input type="text" inputmode="decimal" id="cfg-modo-rascunho"></div>
+      <div class="field"><label>⚡ Rascunho — m²/h</label><input type="text" inputmode="decimal" id="cfg-vel-rascunho"></div>
+      <div class="field"><label>🏭 Produção — Tinta R$/m²</label><input type="text" inputmode="decimal" id="cfg-modo-padrao"></div>
+      <div class="field"><label>🏭 Produção — m²/h</label><input type="text" inputmode="decimal" id="cfg-vel-padrao"></div>
+      <div class="field"><label>✨ Alta — Tinta R$/m²</label><input type="text" inputmode="decimal" id="cfg-modo-alta"></div>
+      <div class="field"><label>✨ Alta — m²/h</label><input type="text" inputmode="decimal" id="cfg-vel-alta"></div>
+      <div class="field"><label>💎 Máxima — Tinta R$/m²</label><input type="text" inputmode="decimal" id="cfg-modo-maxima"></div>
+      <div class="field"><label>💎 Máxima — m²/h</label><input type="text" inputmode="decimal" id="cfg-vel-maxima"></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>Branco Chapado 100% (R$/m²)</label><input type="text" inputmode="decimal" id="cfg-white"></div>
+      <div class="field"><label>Purga / Limpeza (%)</label><input type="text" inputmode="decimal" id="cfg-purga"></div>
+    </div>
+  </div>
+
+  <div class="card"><div class="card-title">⚙️ Parâmetros Gerais & Máquina</div>
+    <div class="hint">💡 Máquina cobrada por <b>tempo</b>: Tempo = Área ÷ Velocidade do modo. Custo = Tempo × Hora Máquina.</div>
+    <div class="grid-2">
+      <div class="field"><label>Margem Perda Material (%)</label><input type="text" inputmode="decimal" id="cfg-perda"></div>
+      <div class="field"><label>Hora Máquina (R$/h)</label><input type="text" inputmode="decimal" id="cfg-hora"></div>
+      <div class="field"><label>Área Útil de Impressão (m²)</label><input type="text" inputmode="decimal" id="cfg-area-util"></div>
+      <div class="field"><label>Empresa Padrão (%)</label><input type="text" inputmode="decimal" id="cfg-empresa"></div>
+      <div class="field"><label>Vendedor Padrão (%)</label><input type="text" inputmode="decimal" id="cfg-vendedor"></div>
+    </div>
+    <div class="hint" style="margin-top:4px;">💡 Área útil = porção de 1 m² realmente aproveitável para impressão (padrão: 0,9 m² = 90%).</div>
+    <button class="btn btn-orange" onclick="salvarConfigs()" style="margin-top:12px;">💾 SALVAR CONFIGURAÇÕES</button>
+  </div>
+
+  <div class="card"><div class="card-title">🖼️ Logo da Empresa (PDF)</div>
+    <div class="field"><label>Upload da Logo (PNG/JPG máx 500KB)</label><input type="file" accept="image/*" onchange="uploadLogo(event)"></div>
+    <img id="logo-preview" class="logo-preview">
+    <button class="btn btn-red" onclick="removerLogo()" style="margin-top:10px;">🗑️ REMOVER LOGO</button>
+  </div>
+  <div class="card"><div class="card-title">🔐 Segurança</div>
+    <div class="field"><label>Novo PIN (4-8 dígitos)</label><input type="password" inputmode="numeric" id="novo-pin" placeholder="••••"></div>
+    <button class="btn btn-slate" onclick="trocarPin()" style="margin-top:12px;">ALTERAR PIN</button>
+  </div>
+  <div class="card"><div class="card-title">💾 Backup</div>
+    <div class="btn-row">
+      <button class="btn btn-orange" onclick="exportarBackup()">⬇️ EXPORTAR</button>
+      <button class="btn btn-slate" onclick="document.getElementById('file-backup').click()">⬆️ IMPORTAR</button>
+      <input type="file" id="file-backup" class="hidden-file" accept=".json,application/json" onchange="importarBackup(event)">
+    </div>
+    <div class="btn-row"><button class="btn btn-red" onclick="restaurarPadroes()">🔄 RESTAURAR PADRÕES</button></div>
+    <div class="storage-note" id="storage-note"></div>
+  </div>
+  <div class="dev-credit"><div class="ds-avatar sm">DS</div><div><b>Daniel Souza</b><span>Desenvolvedor · v16.0</span></div></div>
+</div>
+
+</main>
+<div class="calc-wrap" id="calc-wrap"><button class="btn-calc" onclick="calcular()">⚡ CALCULAR COTAÇÃO</button></div>
+<nav class="bottom-nav">
+  <button class="nav-item active" id="nav-user" onclick="goPage('user')"><span class="icon">🧮</span>Cotação</button>
+  <button class="nav-item" id="nav-hist" onclick="goPage('hist')"><span class="icon">📜</span>Histórico</button>
+  <button class="nav-item" id="nav-vend" onclick="goPage('vend')"><span class="icon">👥</span>Vendedores</button>
+  <button class="nav-item" id="nav-admin" onclick="goPage('admin')"><span class="icon">⚙️</span>Admin</button>
+</nav>
+
+<div class="sheet-overlay" id="sheet-overlay" onclick="if(event.target===this)fecharSheet()">
+  <div class="sheet"><div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>📊 Resumo da <span>Cotação</span></h2><button class="btn-close" onclick="fecharSheet()">✕</button></div>
+    <div class="sheet-body" id="sheet-body"></div>
+  </div>
+</div>
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-box"><div class="lock">🔒</div><h3>Área Administrativa</h3><p>Digite o PIN (padrão: 1234)</p>
+    <input type="password" inputmode="numeric" id="pin-input" maxlength="8" onkeydown="if(event.key==='Enter')validarPin()">
+    <div class="pin-btns"><button class="btn btn-slate" onclick="cancelarPin()">Cancelar</button><button class="btn btn-orange" onclick="validarPin()">Entrar</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const FIREBASE_CONFIG={apiKey:"COLE_AQUI",authDomain:"SEU-PROJETO.firebaseapp.com",databaseURL:"https://SEU-PROJETO-default-rtdb.firebaseio.com",projectId:"SEU-PROJETO",storageBucket:"SEU-PROJETO.appspot.com",messagingSenderId:"000",appId:"1:000:web:xxx"};
+const KEY='calc_rotulos_v16';
+const MODOS=[
+  {key:'Rascunho',custo:'modoRascunho',vel:'modoRascunhoVel',label:'Rascunho',res:'300×600 dpi'},
+  {key:'Padrao',custo:'modoPadrao',vel:'modoPadraoVel',label:'Produção',res:'600×600 dpi'},
+  {key:'Alta',custo:'modoAlta',vel:'modoAltaVel',label:'Alta Qualidade',res:'600×900 dpi'},
+  {key:'Maxima',custo:'modoMaxima',vel:'modoMaximaVel',label:'Máxima Qualidade',res:'1200×1200 dpi'}
+];
+const DEFAULTS={
+  materiais:[{nome:'COUCHÊ',valor:2.55,icms:3.25},{nome:'METALIZADO',valor:3.77,icms:9.75},{nome:'TRANSPARENTE',valor:3.74,icms:9.75},{nome:'PEROLADO',valor:3.71,icms:9.75},{nome:'PEROLADO+',valor:3.84,icms:9.75},{nome:'BR. FOSCO',valor:3.41,icms:9.75}],
+  configs:{perda:15,purga:7.5,
+    modoRascunho:8.83,modoRascunhoVel:14,
+    modoPadrao:11.98,modoPadraoVel:10,
+    modoAlta:14.50,modoAltaVel:7,
+    modoMaxima:17.02,modoMaximaVel:5,
+    whiteChapada:16.00,horaMaquina:25,
+    areaUtilImpressao:0.9,
+    empresaPadrao:15,vendedorPadrao:5},
+  pin:'1234',vendedores:[],historico:[],logo:''
+};
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function normalizeKeys(obj){if(obj===null||typeof obj!=='object')return obj;if(Array.isArray(obj))return obj.map(normalizeKeys);const c={};for(const k in obj){if(!obj.hasOwnProperty(k))continue;c[k.trim()]=normalizeKeys(obj[k]);}return c;}
+
+let cloudMode=false,dbRef=null,lastPushed='';
+const cloudConfigured=!!(FIREBASE_CONFIG.databaseURL&&FIREBASE_CONFIG.databaseURL.indexOf('SEU-PROJETO')===-1);
+function initCloud(){
+  if(!cloudConfigured){setSyncBadge(false);atualizarNotaStorage();return;}
+  try{firebase.initializeApp(FIREBASE_CONFIG);dbRef=firebase.database().ref('data');cloudMode=true;setSyncBadge(true);atualizarNotaStorage();
+    dbRef.once('value',s=>{if(!s.val())dbRef.set(loadDB());}).then(()=>{
+      dbRef.on('value',s=>{const v=normalizeKeys(s.val()||{});if(!v||!v.materiais)return;const n=normalizeCloud(v);const j=JSON.stringify(n);if(j===lastPushed)return;lastPushed=j;try{localStorage.setItem(KEY,j);}catch(e){}renderAll();pulseSync();});
+    });
+  }catch(e){cloudMode=false;setSyncBadge(false);atualizarNotaStorage();}
+}
+function normalizeCloud(v){
+  const b=clone(DEFAULTS);let m=v.materiais;if(!Array.isArray(m))m=Object.values(m||{});m=m.filter(x=>x&&x.nome).map(x=>({nome:String(x.nome).trim().toUpperCase(),valor:Number(x.valor)||0,icms:Number(x.icms)||0}));
+  let c=v.configs||{};for(const k in b.configs){if(c[k]===undefined||c[k]===null||isNaN(Number(c[k])))c[k]=b.configs[k];}
+  let ve=v.vendedores;if(!Array.isArray(ve))ve=ve?Object.values(ve):[];ve=ve.filter(x=>x&&x.nome).map(x=>({nome:String(x.nome).trim(),comissao:Number(x.comissao)||0}));
+  let h=v.historico;if(!Array.isArray(h))h=h?Object.values(h):[];
+  return{materiais:m,configs:c,pin:v.pin?String(v.pin).trim():'1234',vendedores:ve,historico:h,logo:v.logo||''};
+}
+function setSyncBadge(c){const b=document.getElementById('sync-badge');if(c){b.textContent='☁️ NUVEM';b.classList.add('cloud');}else{b.textContent='📴 LOCAL';b.classList.remove('cloud');}}
+function pulseSync(){const b=document.getElementById('sync-badge');b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse');}
+function atualizarNotaStorage(){const e=document.getElementById('storage-note');if(!e)return;e.innerHTML=cloudMode?'☁️ <b>Sincronização ativa</b>':'📴 <b>Modo local</b>';}
+
+function loadDB(){try{const r=JSON.parse(localStorage.getItem(KEY));const d=normalizeKeys(r||{});if(d&&d.materiais&&d.configs){const b=clone(DEFAULTS);for(const k in b.configs){if(d.configs[k]===undefined)d.configs[k]=b.configs[k];}if(!d.pin)d.pin='1234';if(!d.vendedores)d.vendedores=[];if(!d.historico)d.historico=[];if(!d.logo)d.logo='';return d;}}catch(e){}return clone(DEFAULTS);}
+function saveDB(d){lastPushed=JSON.stringify(d);try{localStorage.setItem(KEY,JSON.stringify(d));}catch(e){}if(cloudMode&&dbRef){dbRef.set(d).then(()=>pulseSync()).catch(()=>toast('☁️ Erro sync',true));}return true;}
+
+function parseNum(v){if(typeof v==='number')return v;let s=String(v==null?'':v).trim();if(!s)return NaN;const hd=s.indexOf('.')!==-1,hc=s.indexOf(',')!==-1;if(hd&&hc)s=s.replace(/\./g,'').replace(',','.');else if(hc)s=s.replace(',','.');return parseFloat(s);}
+function brl(n,d){if(d===undefined)d=2;return'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function fmtTempo(h){if(h<1)return Math.round(h*60)+' min';return h.toFixed(2).replace('.',',')+' h';}
+function toast(m,e){const t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(e?' err':'');clearTimeout(t._tm);t._tm=setTimeout(()=>{t.className='toast';},2800);}
+
+function toggleWhiteCov(){document.getElementById('white-cov-wrap').classList.toggle('show',document.getElementById('cor-white').checked);}
+
+// ===== RENDIMENTO POR M² (com área útil) =====
+function obterAreaUnit(){
+  const largura=parseNum(document.getElementById('largura').value)||0;
+  const altura=parseNum(document.getElementById('altura').value)||0;
+  const gap=parseNum(document.getElementById('gap').value)||0;
+  return ((largura+2*gap)/1000)*((altura+2*gap)/1000);
+}
+function obterAreaUtil(){
+  const d=loadDB();
+  return d.configs.areaUtilImpressao||0.9;
+}
+function calcularRendimento(){
+  const areaUnit=obterAreaUnit();
+  const areaUtil=obterAreaUtil();
+  const elM2=document.getElementById('rend-etiquetas-m2');
+  const elArea=document.getElementById('rend-area-unit');
+  const elUtil=document.getElementById('rend-area-util');
+  if(elUtil)elUtil.textContent=areaUtil.toFixed(2).replace('.',',')+' m²';
+  if(areaUnit<=0){
+    elM2.textContent='—'; elArea.textContent='—';
+  }else{
+    elM2.textContent=Math.floor(areaUtil/areaUnit).toLocaleString('pt-BR');
+    elArea.textContent=areaUnit.toFixed(4).replace('.',',')+' m²';
+  }
+  converterM2paraEtiquetas();
+  converterEtiquetasParaM2();
+}
+function converterM2paraEtiquetas(){
+  const m2=parseNum(document.getElementById('conv-m2').value);
+  const res=document.getElementById('conv-m2-result');
+  const areaUnit=obterAreaUnit();
+  const areaUtil=obterAreaUtil();
+  if(isNaN(m2)||m2<=0||areaUnit<=0){res.textContent='—';return;}
+  res.textContent=Math.floor((m2*areaUtil)/areaUnit).toLocaleString('pt-BR')+' etiquetas';
+}
+function converterEtiquetasParaM2(){
+  const etiq=parseNum(document.getElementById('conv-etiq').value);
+  const res=document.getElementById('conv-etiq-result');
+  const areaUnit=obterAreaUnit();
+  const areaUtil=obterAreaUtil();
+  if(isNaN(etiq)||etiq<=0||areaUnit<=0){res.textContent='—';return;}
+  const m2Necessarios=(etiq*areaUnit)/areaUtil;
+  res.textContent=m2Necessarios.toFixed(3).replace('.',',')+' m²';
+}
+
+let adminUnlocked=false,editingMaterial=null,editingVendedor=null;
+function goPage(p){
+  if(p==='admin'&&!adminUnlocked){document.getElementById('pin-overlay').classList.add('open');setTimeout(()=>document.getElementById('pin-input').focus(),200);return;}
+  ['user','hist','vend','admin'].forEach(x=>{document.getElementById('page-'+x).classList.toggle('active',x===p);document.getElementById('nav-'+x).classList.toggle('active',x===p);});
+  document.getElementById('calc-wrap').style.display=p==='user'?'block':'none';
+  if(p==='hist'){popularFiltroVendedores();renderHistorico();}
+  if(p==='vend')renderVendedores();
+  if(p==='admin')carregarLogoPreview();
+}
+function validarPin(){const v=document.getElementById('pin-input').value;if(v===String(loadDB().pin)){adminUnlocked=true;document.getElementById('pin-overlay').classList.remove('open');document.getElementById('pin-input').value='';goPage('admin');toast('🔓 Admin desbloqueado');}else{toast('❌ PIN incorreto!',true);document.getElementById('pin-input').value='';if(navigator.vibrate)navigator.vibrate(80);}}
+function cancelarPin(){document.getElementById('pin-overlay').classList.remove('open');document.getElementById('pin-input').value='';}
+function trocarPin(){const v=document.getElementById('novo-pin').value;if(!/^\d{4,8}$/.test(v)){toast('⚠️ 4-8 dígitos',true);return;}const d=loadDB();d.pin=v;saveDB(d);toast('🔐 PIN alterado!');document.getElementById('novo-pin').value='';}
+
+function renderMateriais(){const d=loadDB();const s=document.getElementById('material');const l=document.getElementById('lista-materiais');const a=s.value;s.innerHTML='';l.innerHTML='';d.materiais.forEach((m,i)=>{const o=document.createElement('option');o.value=m.nome;o.textContent=m.nome;s.appendChild(o);const c=(m.valor*(1+m.icms/100)).toFixed(2);const div=document.createElement('div');div.className='mat-item';div.innerHTML='<div><div class="mat-name">'+m.nome+'</div><div class="mat-sub">R$ '+m.valor.toFixed(2)+' + '+m.icms+'% → <b>R$ '+c+'/m²</b></div></div><div><button class="btn-mini edit" onclick="editarMaterial('+i+')">✏️</button> <button class="btn-mini del" onclick="excluirMaterial('+i+')">🗑️</button></div>';l.appendChild(div);});if(a&&d.materiais.some(m=>m.nome===a))s.value=a;}
+function salvarMaterial(){const n=document.getElementById('adm-nome').value.toUpperCase().trim();const v=parseNum(document.getElementById('adm-valor').value);const ic=parseNum(document.getElementById('adm-icms').value);if(!n||isNaN(v)||isNaN(ic)){toast('⚠️ Preencha tudo',true);return;}const d=loadDB();if(editingMaterial!==null&&editingMaterial!==n)d.materiais=d.materiais.filter(m=>m.nome!==editingMaterial);const idx=d.materiais.findIndex(m=>m.nome===n);if(idx>=0)d.materiais[idx]={nome:n,valor:v,icms:ic};else d.materiais.push({nome:n,valor:v,icms:ic});saveDB(d);toast('✅ Salvo!');editingMaterial=null;document.getElementById('adm-nome').value='';document.getElementById('adm-valor').value='';document.getElementById('adm-icms').value='';renderMateriais();}
+function editarMaterial(i){const m=loadDB().materiais[i];if(!m)return;editingMaterial=m.nome;document.getElementById('adm-nome').value=m.nome;document.getElementById('adm-valor').value=m.valor;document.getElementById('adm-icms').value=m.icms;toast('📝 Editando "'+m.nome+'"');window.scrollTo({top:0,behavior:'smooth'});}
+function excluirMaterial(i){const d=loadDB();const m=d.materiais[i];if(!m||!confirm('Excluir "'+m.nome+'"?'))return;d.materiais.splice(i,1);saveDB(d);toast('🗑️ Excluído');renderMateriais();}
+
+function renderVendedores(){const d=loadDB();const l=document.getElementById('lista-vendedores');const s=document.getElementById('vendedor-select');l.innerHTML='';const a=s.value;s.innerHTML='<option value="">— Sem vendedor (padrão) —</option>';d.vendedores.forEach((v,i)=>{const o=document.createElement('option');o.value=v.nome;o.textContent=v.nome+' ('+v.comissao+'%)';s.appendChild(o);const div=document.createElement('div');div.className='vend-item';div.innerHTML='<div><div class="vend-name">'+v.nome+'</div><div class="vend-sub">Comissão: <b>'+v.comissao+'%</b></div></div><div><button class="btn-mini edit" onclick="editarVendedor('+i+')">✏️</button> <button class="btn-mini del" onclick="excluirVendedor('+i+')">🗑️</button></div>';l.appendChild(div);});if(a&&d.vendedores.some(x=>x.nome===a))s.value=a;}
+function salvarVendedor(){const n=document.getElementById('vend-nome').value.trim();const c=parseNum(document.getElementById('vend-comissao').value);if(!n||isNaN(c)||c<0||c>100){toast('⚠️ Nome e comissão válidos',true);return;}const d=loadDB();if(editingVendedor!==null&&editingVendedor!==n)d.vendedores=d.vendedores.filter(v=>v.nome!==editingVendedor);const idx=d.vendedores.findIndex(v=>v.nome===n);if(idx>=0)d.vendedores[idx]={nome:n,comissao:c};else d.vendedores.push({nome:n,comissao:c});saveDB(d);toast('✅ Vendedor salvo!');editingVendedor=null;document.getElementById('vend-nome').value='';document.getElementById('vend-comissao').value='';renderVendedores();}
+function editarVendedor(i){const v=loadDB().vendedores[i];if(!v)return;editingVendedor=v.nome;document.getElementById('vend-nome').value=v.nome;document.getElementById('vend-comissao').value=v.comissao;toast('📝 Editando "'+v.nome+'"');}
+function excluirVendedor(i){const d=loadDB();const v=d.vendedores[i];if(!v||!confirm('Excluir "'+v.nome+'"?'))return;d.vendedores.splice(i,1);saveDB(d);toast('🗑️ Excluído');renderVendedores();}
+function aplicarComissaoVendedor(){const n=document.getElementById('vendedor-select').value;const d=loadDB();const v=d.vendedores.find(x=>x.nome===n);document.getElementById('vendedor').value=v?v.comissao:d.configs.vendedorPadrao;if(v)toast('👤 '+v.comissao+'% → '+v.nome);}
+
+function uploadLogo(ev){const f=ev.target.files[0];if(!f)return;if(f.size>500000){toast('⚠️ Imagem muito grande (máx 500KB)',true);return;}const r=new FileReader();r.onload=e=>{const d=loadDB();d.logo=e.target.result;saveDB(d);carregarLogoPreview();toast('🖼️ Logo salva!');};r.readAsDataURL(f);ev.target.value='';}
+function removerLogo(){if(!confirm('Remover logo?'))return;const d=loadDB();d.logo='';saveDB(d);carregarLogoPreview();toast('🗑️ Logo removida');}
+function carregarLogoPreview(){const d=loadDB();const img=document.getElementById('logo-preview');if(d.logo){img.src=d.logo;img.style.display='block';}else{img.style.display='none';}}
+
+function popularFiltroVendedores(){const d=loadDB();const s=document.getElementById('hist-filtro-vend');const a=s.value;s.innerHTML='<option value="">Todos os vendedores</option>';const noms=[...new Set(d.historico.map(h=>h.vendedor).filter(x=>x&&x!=='—'))];noms.sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;s.appendChild(o);});if(a)s.value=a;}
+function getHistoricoFiltrado(){
+  const d=loadDB();let h=[...d.historico];
+  const fv=document.getElementById('hist-filtro-vend').value;
+  const di=document.getElementById('hist-data-ini').value;
+  const df=document.getElementById('hist-data-fim').value;
+  if(fv)h=h.filter(x=>x.vendedor===fv);
+  if(di){const dMin=new Date(di.split('-').reverse().join('-'));h=h.filter(x=>{const p=x.dataBr||x.data;const dp=new Date(p.split('/').reverse().join('-'));return dp>=dMin;});}
+  if(df){const dMax=new Date(df.split('-').reverse().join('-'));dMax.setHours(23,59,59);h=h.filter(x=>{const p=x.dataBr||x.data;const dp=new Date(p.split('/').reverse().join('-'));return dp<=dMax;});}
+  return h.sort((a,b)=>b.id-a.id);
+}
+function renderHistorico(){
+  const lista=document.getElementById('lista-historico');lista.innerHTML='';
+  const h=getHistoricoFiltrado();
+  if(!h.length){lista.innerHTML='<div class="empty-state"><div class="icon">📭</div><p>Nenhuma cotação encontrada.</p></div>';return;}
+  h.forEach(item=>{const div=document.createElement('div');div.className='hist-item';div.innerHTML='<div class="hist-info"><div class="hist-top"><span class="hist-data">'+item.data+(item.modo?' · '+item.modo:'')+'</span><span class="hist-vend">'+(item.vendedor||'—')+'</span></div><div class="hist-spec">'+item.largura+'×'+item.altura+'mm · '+item.quantidade+' un · '+item.material+'</div><div class="hist-price">'+brl(item.precoTotal)+'</div></div><div class="hist-actions"><button class="btn-mini edit" onclick="reabrirCotacao('+item.id+')">📂</button><button class="btn-mini del" onclick="excluirCotacao('+item.id+')">🗑️</button></div>';lista.appendChild(div);});
+}
+function limparFiltros(){document.getElementById('hist-filtro-vend').value='';document.getElementById('hist-data-ini').value='';document.getElementById('hist-data-fim').value='';renderHistorico();}
+function salvarNoHistorico(c){const d=loadDB();d.historico.push(c);if(d.historico.length>200)d.historico.shift();saveDB(d);}
+function reabrirCotacao(id){const d=loadDB();const h=d.historico.find(x=>x.id===id);if(!h)return;document.getElementById('largura').value=h.largura;document.getElementById('altura').value=h.altura;document.getElementById('gap').value=h.gap;document.getElementById('quantidade').value=h.quantidade;document.getElementById('material').value=h.material;document.getElementById('vendedor').value=h.pctVendedor;document.getElementById('empresa').value=h.pctEmpresa;document.getElementById('frete').value=h.frete;if(h.modoKey){const radio=document.querySelector('input[name="modo"][value="'+h.modoKey+'"]');if(radio)radio.checked=true;}calcularRendimento();goPage('user');toast('📂 Cotação carregada');}
+function excluirCotacao(id){if(!confirm('Excluir esta cotação?'))return;const d=loadDB();d.historico=d.historico.filter(x=>x.id!==id);saveDB(d);renderHistorico();toast('🗑️ Excluída');}
+
+function exportarCSV(){
+  const h=getHistoricoFiltrado();
+  if(!h.length){toast('⚠️ Nada para exportar',true);return;}
+  const sep=';';
+  const header=['Data','Vendedor','Largura','Altura','Gap','Quantidade','Material','Modo','Cores','Área c/Perda','Tempo Produção','Custo Máquina','Custo Tiragem','Empresa %','Empresa R$','Vendedor %','Vendedor R$','Frete','Preço Total','Preço Unit'];
+  const rows=h.map(x=>[x.data,x.vendedor||'',x.largura,x.altura,x.gap,x.quantidade,x.material,x.modo||'',(x.canais||[]).join('+'),(x.areaPerda||0).toFixed(3),(x.tempoProducao||0).toFixed(2),(x.custoMaquina||0).toFixed(2),(x.custoTiragem||0).toFixed(2),x.pctEmpresa,(x.valEmpresa||0).toFixed(2),x.pctVendedor,(x.valVendedor||0).toFixed(2),(x.frete||0).toFixed(2),(x.precoTotal||0).toFixed(2),(x.precoUnit||0).toFixed(4)]);
+  const csv='\uFEFF'+[header.join(sep),...rows.map(r=>r.join(sep))].join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='historico_cotacoes_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(a.href);
+  toast('📥 CSV exportado! Abra no Excel.');
+}
+
+function carregarConfigs(){
+  const c=loadDB().configs;
+  document.getElementById('cfg-modo-rascunho').value=c.modoRascunho;
+  document.getElementById('cfg-vel-rascunho').value=c.modoRascunhoVel;
+  document.getElementById('cfg-modo-padrao').value=c.modoPadrao;
+  document.getElementById('cfg-vel-padrao').value=c.modoPadraoVel;
+  document.getElementById('cfg-modo-alta').value=c.modoAlta;
+  document.getElementById('cfg-vel-alta').value=c.modoAltaVel;
+  document.getElementById('cfg-modo-maxima').value=c.modoMaxima;
+  document.getElementById('cfg-vel-maxima').value=c.modoMaximaVel;
+  document.getElementById('cfg-white').value=c.whiteChapada;
+  document.getElementById('cfg-purga').value=c.purga;
+  document.getElementById('cfg-perda').value=c.perda;
+  document.getElementById('cfg-hora').value=c.horaMaquina;
+  document.getElementById('cfg-area-util').value=c.areaUtilImpressao;
+  document.getElementById('cfg-empresa').value=c.empresaPadrao;
+  document.getElementById('cfg-vendedor').value=c.vendedorPadrao;
+  document.getElementById('empresa').value=c.empresaPadrao;
+  document.getElementById('vendedor').value=c.vendedorPadrao;
+  calcularRendimento();
+}
+function salvarConfigs(){
+  const d=loadDB();
+  d.configs={
+    perda:parseNum(document.getElementById('cfg-perda').value),
+    purga:parseNum(document.getElementById('cfg-purga').value),
+    modoRascunho:parseNum(document.getElementById('cfg-modo-rascunho').value),
+    modoRascunhoVel:parseNum(document.getElementById('cfg-vel-rascunho').value),
+    modoPadrao:parseNum(document.getElementById('cfg-modo-padrao').value),
+    modoPadraoVel:parseNum(document.getElementById('cfg-vel-padrao').value),
+    modoAlta:parseNum(document.getElementById('cfg-modo-alta').value),
+    modoAltaVel:parseNum(document.getElementById('cfg-vel-alta').value),
+    modoMaxima:parseNum(document.getElementById('cfg-modo-maxima').value),
+    modoMaximaVel:parseNum(document.getElementById('cfg-vel-maxima').value),
+    whiteChapada:parseNum(document.getElementById('cfg-white').value),
+    horaMaquina:parseNum(document.getElementById('cfg-hora').value),
+    areaUtilImpressao:parseNum(document.getElementById('cfg-area-util').value),
+    empresaPadrao:parseNum(document.getElementById('cfg-empresa').value),
+    vendedorPadrao:parseNum(document.getElementById('cfg-vendedor').value)
+  };
+  for(const k in d.configs){if(isNaN(d.configs[k])){toast('⚠️ Campo inválido: '+k,true);return;}}
+  saveDB(d);toast('✅ Configurações salvas!');carregarConfigs();
+}
+
+function exportarBackup(){const d=loadDB();const dados={versao:16,dataExportacao:new Date().toLocaleString('pt-BR'),materiais:d.materiais,configs:d.configs,vendedores:d.vendedores,logo:d.logo};const b=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='backup_calculadora_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(a.href);toast('⬇️ Backup exportado!');}
+function importarBackup(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const raw=JSON.parse(e.target.result);const d=normalizeKeys(raw);if(!d.materiais||!d.configs)throw 0;const db=loadDB();db.materiais=d.materiais;db.configs=d.configs;if(d.vendedores)db.vendedores=d.vendedores;if(d.logo)db.logo=d.logo;saveDB(db);renderAll();toast('⬆️ Backup importado!');}catch(x){toast('❌ Arquivo inválido!',true);}};r.readAsText(f);ev.target.value='';}
+function restaurarPadroes(){if(!confirm('Restaurar fábrica?'))return;saveDB(clone(DEFAULTS));renderAll();toast('🔄 Restaurado');}
+function renderAll(){renderMateriais();renderVendedores();renderHistorico();carregarConfigs();carregarLogoPreview();calcularRendimento();}
+
+// ===== CÁLCULO =====
+let ultimoResultado=null;
+function calcular(){
+  const d=loadDB();const cfg=d.configs;
+  const largura=parseNum(document.getElementById('largura').value);
+  const altura=parseNum(document.getElementById('altura').value);
+  const gap=parseNum(document.getElementById('gap').value);
+  const qtd=parseNum(document.getElementById('quantidade').value);
+  const matNome=document.getElementById('material').value;
+  const vendNome=document.getElementById('vendedor-select').value;
+  const areaUtil=cfg.areaUtilImpressao||0.9;
+
+  const modoEl=document.querySelector('input[name="modo"]:checked');
+  const modoKey=modoEl?modoEl.value:'Padrao';
+  const modo=MODOS.find(m=>m.key===modoKey)||MODOS[1];
+  const custoModo=cfg[modo.custo];
+  const velModo=cfg[modo.vel]||10;
+
+  const coresCMYK=[];
+  if(document.getElementById('cor-yellow').checked)coresCMYK.push('Yellow');
+  if(document.getElementById('cor-magenta').checked)coresCMYK.push('Magenta');
+  if(document.getElementById('cor-cyan').checked)coresCMYK.push('Cyan');
+  if(document.getElementById('cor-black').checked)coresCMYK.push('Black');
+  const custoCMYK=custoModo*(coresCMYK.length/4);
+
+  let custoWhite=0,whiteCov=0;
+  if(document.getElementById('cor-white').checked){
+    whiteCov=parseNum(document.getElementById('cor-branco-cov').value)||20;
+    custoWhite=cfg.whiteChapada*(whiteCov/100);
+  }
+  const canais=[...coresCMYK];
+  if(custoWhite>0)canais.push('White '+whiteCov+'%');
+
+  const pctVend=parseNum(document.getElementById('vendedor').value)||0;
+  const pctEmp=parseNum(document.getElementById('empresa').value)||0;
+  const frete=parseNum(document.getElementById('frete').value)||0;
+
+  if([largura,altura,gap,qtd].some(v=>isNaN(v))||qtd<=0){toast('⚠️ Preencha dimensões e quantidade',true);return;}
+  const mat=d.materiais.find(m=>m.nome===matNome);
+  if(!mat){toast('⚠️ Material não encontrado',true);return;}
+  if(canais.length===0){toast('⚠️ Selecione ao menos uma cor',true);return;}
+
+  const lB=(largura+2*gap)/1000,aB=(altura+2*gap)/1000;
+  const areaU=lB*aB,areaL=areaU*qtd,areaP=areaL*(1+cfg.perda/100);
+  const etiquetasM2=areaU>0?Math.floor(areaUtil/areaU):0;
+
+  const cMat=mat.valor*(1+mat.icms/100);
+  const subTinta=custoCMYK+custoWhite;
+  const valPurga=subTinta*(cfg.purga/100);
+  const cTin=subTinta+valPurga;
+  const custoVarM2=cMat+cTin;
+  const custoVarTotal=custoVarM2*areaP;
+
+  const tempoProducao=areaP/velModo;
+  const custoMaquinaTotal=tempoProducao*cfg.horaMaquina;
+
+  const cTir=custoVarTotal+custoMaquinaTotal;
+  const cUni=cTir/qtd;
+  const vEmp=cTir*pctEmp/100;const vVend=cTir*pctVend/100;
+  const pTot=cTir+vEmp+vVend+frete;const pUni=pTot/qtd;
+
+  ultimoResultado={largura,altura,gap,qtd,matNome,canais,modo:modo.label+' ('+modo.res+')',modoKey,velModo,areaP,tempoProducao,custoMaquinaTotal,etiquetasM2,areaUtil,cTin,cTir,vEmp,vVend,frete,pTot,pUni,pctEmp,pctVend,vendNome};
+
+  salvarNoHistorico({id:Date.now(),data:new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),dataBr:new Date().toLocaleDateString('pt-BR'),vendedor:vendNome||'—',largura,altura,gap,quantidade:qtd,material:matNome,modo:modo.label,modoKey,canais,areaPerda:areaP,tempoProducao:tempoProducao,custoMaquina:custoMaquinaTotal,precoTotal:pTot,precoUnit:pUni,pctVendedor:pctVend,pctEmpresa:pctEmp,frete,custoTiragem:cTir,valEmpresa:vEmp,valVendedor:vVend});
+
+  function ri(l,v){return'<div class="r-item"><span>'+l+'</span><b>'+v+'</b></div>';}
+  let h='<div class="hero"><div class="t">💰 Preço de Venda Total</div><div class="v">'+brl(pTot)+'</div><div class="u">'+brl(pUni,4)+'/unid · '+Math.round(qtd).toLocaleString('pt-BR')+' un'+(vendNome?' · '+vendNome:'')+'</div></div>';
+
+  h+='<div class="r-sec">Áreas</div>'+ri('Bruta',(lB*1000).toFixed(0)+'×'+(aB*1000).toFixed(0)+' mm')+ri('Área Unidade',areaU.toFixed(4)+' m²')+ri('Rendimento (área útil '+areaUtil.toFixed(1)+' m²)',etiquetasM2+' etiquetas/m²')+ri('Área Líquida',areaL.toFixed(3)+' m²')+ri('Área c/ Perda ('+cfg.perda+'%)',areaP.toFixed(3)+' m²');
+
+  h+='<div class="r-sec">Impressão — '+modo.label+'</div>';
+  h+=ri('Resolução',modo.res);
+  h+=ri('Velocidade do modo',velModo+' m²/h');
+  h+=ri('Canais ativos',canais.join(', '));
+
+  h+='<div class="r-sec">Custos Variáveis /m²</div>';
+  h+=ri('Material ('+matNome+')',brl(cMat,3));
+  h+=ri('· Tinta CMYK ('+coresCMYK.length+'/4)',brl(custoCMYK,3));
+  if(custoWhite>0)h+=ri('· Tinta White ('+whiteCov+'%)',brl(custoWhite,3));
+  h+=ri('· Purga ('+cfg.purga+'%)','+ '+brl(valPurga,3));
+  h+=ri('Subtotal Variável /m²',brl(custoVarM2,3));
+
+  h+='<div class="r-sec">⏱️ Produção & Máquina</div>';
+  h+=ri('Tempo de produção',areaP.toFixed(3)+' ÷ '+velModo+' m²/h = <b>'+fmtTempo(tempoProducao)+'</b>');
+  h+=ri('Custo da máquina',fmtTempo(tempoProducao)+' × '+brl(cfg.horaMaquina)+'/h');
+  h+='<div class="r-total"><span>CUSTO MÁQUINA</span><span>'+brl(custoMaquinaTotal)+'</span></div>';
+
+  h+='<div class="r-sec">💵 Custos Totais</div>';
+  h+=ri('Custos variáveis',brl(custoVarTotal));
+  h+=ri('Custo máquina',brl(custoMaquinaTotal));
+  h+='<div class="r-total"><span>CUSTO TIRAGEM</span><span>'+brl(cTir)+'</span></div>';
+  h+=ri('Custo / Rótulo',brl(cUni,4));
+
+  h+='<div class="r-sec">Comercial</div>';
+  h+='<div class="r-total comm"><span>Empresa ('+pctEmp+'%)</span><b>+ '+brl(vEmp)+'</b></div>';
+  h+='<div class="r-total comm"><span>Vendedor ('+pctVend+'%)</span><b>+ '+brl(vVend)+'</b></div>';
+  h+='<div class="r-total comm"><span>Frete</span><b>+ '+brl(frete)+'</b></div>';
+  h+='<button class="btn-pdf" onclick="gerarPDF()">📄 BAIXAR PDF</button>';
+  h+='<button class="btn-share" onclick="compartilhar()">📤 COMPARTILHAR</button>';
+  h+='<div class="sheet-ds">DS · Daniel Souza</div>';
+  document.getElementById('sheet-body').innerHTML=h;
+  document.getElementById('sheet-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  if(navigator.vibrate)navigator.vibrate(30);
+}
+function fecharSheet(){document.getElementById('sheet-overlay').classList.remove('open');document.body.style.overflow='';}
+
+function gerarPDF(){
+  const r=ultimoResultado;if(!r){toast('⚠️ Calcule primeiro',true);return;}
+  const{jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});const W=210,M=20;let y=20;
+  const d=loadDB();
+  doc.setFillColor(15,15,15);doc.rect(0,0,W,38,'F');
+  doc.setFillColor(249,115,22);doc.rect(0,36,W,3,'F');
+  if(d.logo){try{doc.addImage(d.logo,'AUTO',M,6,0,26);}catch(e){}}
+  const tx=d.logo?M+35:M;
+  doc.setTextColor(255,255,255);doc.setFontSize(18);doc.setFont('helvetica','bold');doc.text('COTAÇÃO DE RÓTULOS',tx,18);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(148,163,184);
+  doc.text('Calculadora V3 · Daniel Souza',tx,25);
+  doc.text('Data: '+new Date().toLocaleDateString('pt-BR'),W-M,18,{align:'right'});
+  if(r.vendNome)doc.text('Vendedor: '+r.vendNome,W-M,25,{align:'right'});
+  y=48;
+  doc.setTextColor(15,23,42);doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text('ESPECIFICAÇÕES',M,y);y+=6;
+  doc.setDrawColor(249,115,22);doc.setLineWidth(0.5);doc.line(M,y,W-M,y);y+=6;
+  doc.setFontSize(10);doc.setFont('helvetica','normal');
+  [['Dimensões',r.largura+' × '+r.altura+' mm (gap '+r.gap+')'],['Quantidade',Math.round(r.qtd).toLocaleString('pt-BR')+' un'],['Material',r.matNome],['Modo de Impressão',r.modo],['Cores Ativas',r.canais.join(', ')],['Rendimento',r.etiquetasM2+' etiquetas/m²'],['Tempo de Produção',fmtTempo(r.tempoProducao)]].forEach(s=>{doc.setFont('helvetica','bold');doc.text(s[0]+':',M,y);doc.setFont('helvetica','normal');doc.text(String(s[1]),M+45,y);y+=5.5;});
+  y+=4;
+  doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text('COMPOSIÇÃO DE CUSTOS',M,y);y+=6;doc.line(M,y,W-M,y);y+=6;doc.setFontSize(10);
+  [['Custos Variáveis (material + tinta)',brl(r.cTir-r.custoMaquinaTotal)],['Custo Máquina ('+fmtTempo(r.tempoProducao)+')',brl(r.custoMaquinaTotal)],['Custo da Tiragem',brl(r.cTir)],['Empresa ('+r.pctEmp+'%)','+ '+brl(r.vEmp)],['Vendedor ('+r.pctVend+'%)','+ '+brl(r.vVend)],['Frete','+ '+brl(r.frete)]].forEach(c=>{doc.setFont('helvetica','normal');doc.text(c[0],M,y);doc.text(c[1],W-M,y,{align:'right'});y+=5.5;});
+  y+=2;doc.setFillColor(249,115,22);doc.roundedRect(M,y-5,W-2*M,14,2,2,'F');doc.setTextColor(255,255,255);doc.setFontSize(13);doc.setFont('helvetica','bold');doc.text('PREÇO TOTAL',M+5,y+3);doc.text(brl(r.pTot),W-M-5,y+3,{align:'right'});y+=16;
+  doc.setTextColor(15,23,42);doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text('Por rótulo: '+brl(r.pUni,4),M,y);
+  y=270;doc.setDrawColor(226,232,240);doc.line(M,y,W-M,y);doc.setFontSize(8);doc.setTextColor(148,163,184);doc.text('Calculadora de Rótulos V3 · Desenvolvido por Daniel Souza',W/2,278,{align:'center'});
+  doc.save('cotacao_rotulos_'+Date.now()+'.pdf');toast('📄 PDF gerado!');
+}
+
+function compartilhar(){
+  const r=ultimoResultado;if(!r)return;
+  const txt='🏷️ *COTAÇÃO — RÓTULOS*\n━━━━━━━━━━━━━━━\n'+(r.vendNome?'👤 '+r.vendNome+'\n':'')+'📐 '+r.largura+'×'+r.altura+'mm (gap '+r.gap+')\n📦 '+Math.round(r.qtd).toLocaleString('pt-BR')+' un\n🧻 '+r.matNome+'\n🖨️ '+r.modo+'\n🎨 '+r.canais.join(', ')+'\n📏 Rendimento: '+r.etiquetasM2+' etiquetas/m²\n⏱️ Tempo de máquina: '+fmtTempo(r.tempoProducao)+'\n━━━━━━━━━━━━━━━\n🏭 Custo: '+brl(r.cTir)+'\n💼 Empresa ('+r.pctEmp+'%): +'+brl(r.vEmp)+'\n🤝 Vendedor ('+r.pctVend+'%): +'+brl(r.vVend)+'\n🚚 Frete: +'+brl(r.frete)+'\n━━━━━━━━━━━━━━━\n💰 *TOTAL: '+brl(r.pTot)+'*\n🔖 Unid: '+brl(r.pUni,4)+'\n\n_Daniel Souza · Calc. Rótulos V3_';
+  if(navigator.share)navigator.share({title:'Cotação',text:txt}).catch(()=>{});
+  else if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>toast('📋 Copiado!')).catch(()=>fbCopy(txt));
+  else fbCopy(txt);
+  function fbCopy(t){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('📋 Copiado!');}catch(e){}document.body.removeChild(ta);}
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  initCloud();
+  renderAll();
+  ['largura','altura','gap'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.addEventListener('input',calcularRendimento);
+  });
+});
+</script>
+</body>
+</html>
